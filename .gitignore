@@ -1,0 +1,4 @@
+.env
+package-lock.json
+package.json
+error.log

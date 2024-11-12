@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Definetly not urban rivals</title>
+    <style>
+        /* Improved CSS styles for better UI/UX */
+
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            position: relative;
+            background-color: #f0f0f0;
+        }
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        /* Login Buttons */
+        #login-area {
+            margin: 50px;
+        }
+
+        .login-button {
+            padding: 15px 30px;
+            font-size: 18px;
+            margin: 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            transition: background-color 0.3s;
+        }
+
+        .login-button:hover {
+            background-color: #45a049;
+        }
+
+        .game-board {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+            position: relative;
+        }
+
+        .player-area {
+            width: 100%;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .player-area.current-turn {
+            border: 2px solid gold;
+            animation: turnIndicator 1s infinite alternate;
+        }
+
+        @keyframes turnIndicator {
+            from { box-shadow: 0 0 10px gold; }
+            to { box-shadow: 0 0 20px gold; }
+        }
+
+        .player-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .player-header .player-name {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+
+        .player-header .player-stats {
+            display: flex;
+            font-size: 14px;
+            position: relative;
+        }
+
+        .player-header .player-stats p {
+            margin: 0 5px;
+        }
+
+        .card-row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .card {
+            border: 1px solid #333;
+            padding: 5px;
+            margin: 5px;
+            width: 120px;
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.3s;
+            background-color: #fff;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+        }
+
+        .highlight {
+            border-color: gold;
+            animation: highlightAnim 0.5s infinite alternate;
+        }
+
+        @keyframes highlightAnim {
+            from { box-shadow: 0 0 5px gold; }
+            to { box-shadow: 0 0 15px gold; }
+        }
+
+        .disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .stats {
+            font-size: 12px;
+            margin-top: 5px;
+            text-align: left;
+        }
+
+        .bucks-slider {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px;
+        }
+
+        .bucks-slider .rectangle {
+            width: 30px;
+            height: 15px;
+            background-color: lightgreen;
+            margin: 2px;
+            cursor: pointer;
+            border: 1px solid #333;
+        }
+
+        .bucks-slider .rectangle.filled {
+            background-color: green;
+        }
+
+        /* Battle Result Display */
+        .battle-result {
+            font-size: 48px;
+            margin: 20px 0;
+            opacity: 0;
+            animation: battleResultAnim 2s forwards;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 100%;
+            text-align: center;
+            font-weight: bold;
+            text-shadow: 2px 2px 5px #000;
+        }
+
+        @keyframes battleResultAnim {
+            0% { opacity: 0; transform: scale(0.5) translateY(-50%); }
+            50% { opacity: 1; transform: scale(1.2) translateY(-50%); }
+            100% { opacity: 0; transform: scale(1) translateY(-50%); }
+        }
+
+        /* Turn Indicator */
+        .turn-indicator {
+            font-size: 36px;
+            font-weight: bold;
+            opacity: 0;
+            position: absolute;
+            top: 45%;
+            width: 100%;
+            text-align: center;
+            animation: fadeInOut 2s forwards;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            25% { opacity: 1; }
+            75% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* Bucks Selection Area */
+        #bucks-selection {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255,255,255,0.95);
+            padding: 20px;
+            border: 2px solid #333;
+            border-radius: 10px;
+            z-index: 1000;
+        }
+
+        /* LP Animation */
+        .lp-animation {
+            position: absolute;
+            color: red;
+            font-weight: bold;
+            font-size: 18px;
+            animation: lpChangeAnim 2s forwards;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        @keyframes lpChangeAnim {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -20px);
+            }
+        }
+
+        /* Notification Modal */
+        .notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255,255,255,0.95);
+            padding: 20px;
+            border: 2px solid #333;
+            border-radius: 10px;
+            z-index: 1000;
+        }
+
+        .notification p {
+            margin-bottom: 20px;
+        }
+
+        .notification button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Definetly not urban rivals</h1>
+
+    <!-- Login Area with Buttons -->
+    <div id="login-area">
+        <button class="login-button" onclick="selectPlayer('senf')">senf</button>
+        <button class="login-button" onclick="selectPlayer('börek')">börek</button>
+    </div>
+
+    <!-- Game Board -->
+    <div class="game-board" id="game-board" style="display: none;">
+        <!-- Player areas will be injected here -->
+    </div>
+
+    <!-- Action Area for Bucks Selection -->
+    <div id="action-area">
+        <div id="bucks-selection" style="display: none;">
+            <p>Select Bucks to Boost Strength:</p>
+            <div class="bucks-slider" id="bucks-slider"></div>
+            <p><span id="bucks-selected">0</span> / <span id="bucks-total">12</span></p>
+            <button onclick="submitMove()">Submit</button>
+        </div>
+    </div>
+
+    <!-- Notification Modal -->
+    <div id="notification" class="notification" style="display: none;">
+        <p id="notification-message"></p>
+        <button onclick="closeNotification()">OK</button>
+    </div>
+
+    <!-- Include Socket.io -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Client Code
+
+        // Game State Variables
+        let playerId;
+        let playerName;
+        let opponentName;
+        let myPlayer;
+        let opponentPlayer;
+        let gameState;
+        let gameOver = false;
+        let lastBattleResultId = null;
+
+        // Initialize Socket.io
+        const socket = io();
+
+        // Handle socket connection
+        socket.on('connect', () => {
+            playerId = socket.id;
+            console.log('Connected with socket.id:', playerId);
+        });
+
+        // Handle receiving player data after joining
+        socket.on('playerData', (data) => {
+            console.log('Received playerData:', data);
+            playerName = data.playerName;
+        });
+
+        // Handle game full scenario
+        socket.on('gameFull', () => {
+            showNotification("The game is full. Please try again later.");
+        });
+
+        // Handle opponent disconnection
+        socket.on('playerDisconnected', (message) => {
+            showNotification(message);
+            setTimeout(() => {
+                location.reload();
+            }, 3000); // Reload after 3 seconds
+        });
+
+        // Handle game start
+        socket.on('gameStarted', (state) => {
+            gameState = state;
+            initializeGame();
+        });
+
+        // Handle game state updates
+        socket.on('gameState', (state) => {
+            gameState = state;
+            updateGame();
+        });
+
+        // Handle errors from the server
+        socket.on('error', (message) => {
+            showNotification(message);
+        });
+
+        // Function to handle player selection (senf or börek)
+        function selectPlayer(choice) {
+            playerName = choice;
+            socket.emit('joinGame', playerName);
+            document.getElementById('login-area').style.display = 'none';
+            console.log(`Player selected: ${choice}`);
+        }
+
+        // Initialize the game UI after both players have joined
+        function initializeGame() {
+            // Hide login area and show game board
+            document.getElementById('game-board').style.display = 'flex';
+            document.getElementById('login-area').style.display = 'none';
+
+            // Update local references to players
+            if (playerId === gameState.player1.id) {
+                myPlayer = gameState.player1;
+                opponentPlayer = gameState.player2;
+            } else {
+                myPlayer = gameState.player2;
+                opponentPlayer = gameState.player1;
+            }
+
+            renderPlayerAreas();
+            updateGame();
+        }
+
+        // Render player areas (both players' fields)
+        function renderPlayerAreas() {
+            const gameBoard = document.getElementById('game-board');
+            gameBoard.innerHTML = ''; // Clear any existing content
+
+            // Create opponent's area
+            const opponentArea = createPlayerArea(opponentPlayer, false);
+            gameBoard.appendChild(opponentArea);
+
+            // Battle result placeholder
+            const battleResultDiv = document.createElement('div');
+            battleResultDiv.id = 'battle-result';
+            battleResultDiv.className = 'battle-result';
+            gameBoard.appendChild(battleResultDiv);
+
+            // Create my area
+            const myArea = createPlayerArea(myPlayer, true);
+            gameBoard.appendChild(myArea);
+        }
+
+        // Create a player area (either mine or opponent's)
+        function createPlayerArea(player, isMyArea) {
+            const playerArea = document.createElement('div');
+            playerArea.className = 'player-area';
+            playerArea.id = isMyArea ? 'my-player-area' : 'opponent-player-area';
+
+            const playerHeader = document.createElement('div');
+            playerHeader.className = 'player-header';
+
+            const playerNameElem = document.createElement('h2');
+            playerNameElem.className = 'player-name';
+            playerNameElem.id = `player${player === gameState.player1 ? '1' : '2'}-name`;
+            playerNameElem.innerText = player.name;
+            playerHeader.appendChild(playerNameElem);
+
+            const playerStats = document.createElement('div');
+            playerStats.className = 'player-stats';
+
+            const lpElem = document.createElement('p');
+            lpElem.innerHTML = `<strong>LP:</strong> <span id="player${player === gameState.player1 ? '1' : '2'}-lp">${player.lp}</span>`;
+            playerStats.appendChild(lpElem);
+
+            const bucksElem = document.createElement('p');
+            bucksElem.innerHTML = `<strong>Bucks:</strong> <span id="player${player === gameState.player1 ? '1' : '2'}-bucks">${player.bucks}</span>`;
+            playerStats.appendChild(bucksElem);
+
+            playerHeader.appendChild(playerStats);
+            playerArea.appendChild(playerHeader);
+
+            const cardRow = document.createElement('div');
+            cardRow.className = 'card-row';
+            cardRow.id = `player${player === gameState.player1 ? '1' : '2'}-cards`;
+            playerArea.appendChild(cardRow);
+
+            return playerArea;
+        }
+
+        // Update the game UI based on the current game state
+        function updateGame() {
+            // Update local references to players
+            if (playerId === gameState.player1.id) {
+                myPlayer = gameState.player1;
+                opponentPlayer = gameState.player2;
+            } else {
+                myPlayer = gameState.player2;
+                opponentPlayer = gameState.player1;
+            }
+
+            // Update UI elements
+            updateGameInfo();
+            renderField();
+
+            // Handle turn logic
+            if (gameState.currentPlayer.id === playerId && !gameOver) {
+                if (myPlayer.selectedCard === null) {
+                    enableCardSelection();
+                    displayTurnIndicator("Your Turn");
+                } else if (document.getElementById('bucks-selection').style.display !== 'block') {
+                    showBucksSelection();
+                }
+            } else {
+                displayTurnIndicator(`${gameState.currentPlayer.name}'s Turn`);
+            }
+
+            // Handle battle result display
+            if (gameState.battleResult && gameState.battleResult.id !== lastBattleResultId) {
+                handleBattleResult(gameState.battleResult);
+                lastBattleResultId = gameState.battleResult.id;
+            }
+
+            // Check for game over
+            if (gameState.gameOver && !gameOver) {
+                gameOver = true;
+                const winner = determineWinner();
+                displayGameOver(winner);
+                console.log(`Game Over. ${winner.name} wins!`);
+                displayTurnIndicator(`${winner.name} Wins!`);
+            }
+        }
+
+        // Enable card selection for the current player
+        function enableCardSelection() {
+            renderField();
+        }
+
+        // Render the field for both players
+        function renderField() {
+            const myCardsDiv = document.getElementById(`player${myPlayer === gameState.player1 ? '1' : '2'}-cards`);
+            const opponentCardsDiv = document.getElementById(`player${opponentPlayer === gameState.player1 ? '1' : '2'}-cards`);
+            myCardsDiv.innerHTML = '';
+            opponentCardsDiv.innerHTML = '';
+
+            // Render my cards
+            myPlayer.field.forEach((card, index) => {
+                const cardDiv = createCardDiv(card, index, myPlayer);
+                myCardsDiv.appendChild(cardDiv);
+            });
+
+            // Render opponent's cards
+            opponentPlayer.field.forEach((card, index) => {
+                const cardDiv = createCardDiv(card, index, opponentPlayer);
+                opponentCardsDiv.appendChild(cardDiv);
+            });
+
+            // Highlight current player's area
+            document.getElementById('my-player-area').classList.toggle('current-turn', gameState.currentPlayer.id === myPlayer.id);
+            document.getElementById('opponent-player-area').classList.toggle('current-turn', gameState.currentPlayer.id === opponentPlayer.id);
+        }
+
+        // Create a card element
+        function createCardDiv(card, index, player) {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'card';
+            cardDiv.dataset.index = index;
+
+            // Era Indicator
+            const eraCircle = document.createElement('div');
+            eraCircle.className = 'era-circle';
+            let eraColor = '';
+            switch (card.era) {
+                case 'Era 1':
+                    eraColor = 'blue';
+                    break;
+                case 'Era 2':
+                    eraColor = 'red';
+                    break;
+                case 'Era 3':
+                    eraColor = 'green';
+                    break;
+                case 'Era 4':
+                    eraColor = 'black';
+                    break;
+                default:
+                    eraColor = 'gray';
+            }
+            eraCircle.style.backgroundColor = eraColor;
+            cardDiv.appendChild(eraCircle);
+
+            // Card Image
+            const img = document.createElement('img');
+            img.src = card.image;
+            img.alt = card.name;
+            img.width = 100;
+            img.height = 100;
+            cardDiv.appendChild(img);
+
+            // Card Name
+            const nameElem = document.createElement('div');
+            nameElem.innerHTML = `<strong>${card.name}</strong>`;
+            cardDiv.appendChild(nameElem);
+
+            // Card Stats
+            const statsDiv = document.createElement('div');
+            statsDiv.className = 'stats';
+            statsDiv.innerHTML = `
+                Strength: ${card.strength}<br>
+                Damage: ${card.damage}<br>
+                Ability: ${card.abilityDesc}
+            `;
+            cardDiv.appendChild(statsDiv);
+
+            // Highlight selected card
+            if (player.selectedCard === index) {
+                cardDiv.classList.add('highlight');
+            } else {
+                cardDiv.classList.remove('highlight');
+            }
+
+            // Add click handler only if it's the current player's turn and no card has been selected yet
+            if (player.id === playerId && gameState.currentPlayer.id === playerId && player.selectedCard === null) {
+                cardDiv.onclick = () => selectCard(index);
+            } else {
+                cardDiv.classList.add('disabled');
+            }
+
+            return cardDiv;
+        }
+
+        // Handle card selection
+        function selectCard(index) {
+            socket.emit('playerAction', {
+                action: 'selectCard',
+                selectedCard: index,
+            });
+        }
+
+        // Show the bucks selection slider
+        function showBucksSelection() {
+            const bucksSelection = document.getElementById('bucks-selection');
+            bucksSelection.style.display = 'block';
+
+            // Create the bucks slider
+            createBucksSlider();
+
+            // Add event listener to allow clicking outside to cancel
+            setTimeout(() => { // Timeout to prevent immediate trigger when opening
+                document.addEventListener('click', outsideClickListener);
+            }, 0);
+        }
+
+        // Create the bucks slider with clickable rectangles
+        function createBucksSlider() {
+            const slider = document.getElementById('bucks-slider');
+            slider.innerHTML = ''; // Clear previous sliders
+            const totalBucks = myPlayer.bucks;
+            document.getElementById('bucks-total').innerText = totalBucks;
+            document.getElementById('bucks-selected').innerText = '0';
+
+            for (let i = 1; i <= totalBucks; i++) {
+                const rect = document.createElement('div');
+                rect.className = 'rectangle';
+                rect.dataset.value = i;
+                rect.onclick = handleSliderClick;
+                slider.appendChild(rect);
+            }
+        }
+
+        // Handle clicking on the bucks slider
+        function handleSliderClick(event) {
+            const value = parseInt(event.target.dataset.value);
+            setSliderValue(value);
+        }
+
+        // Set the selected bucks value
+        function setSliderValue(value) {
+            const rectangles = document.querySelectorAll('.bucks-slider .rectangle');
+            rectangles.forEach(rect => {
+                const rectValue = parseInt(rect.dataset.value);
+                if (rectValue <= value) {
+                    rect.classList.add('filled');
+                } else {
+                    rect.classList.remove('filled');
+                }
+            });
+            document.getElementById('bucks-selected').innerText = value;
+            myPlayer.selectedBucks = value;
+        }
+
+        // Submit the selected move with the chosen bucks
+        function submitMove() {
+            const bucks = myPlayer.selectedBucks;
+            if (bucks > myPlayer.bucks || bucks < 0 || isNaN(bucks)) {
+                showNotification('Invalid number of bucks.');
+                return;
+            }
+            document.getElementById('bucks-selection').style.display = 'none';
+            socket.emit('playerAction', {
+                action: 'submitMove',
+                selectedBucks: bucks,
+            });
+
+            // Remove the outside click listener after submitting
+            document.removeEventListener('click', outsideClickListener);
+        }
+
+        // Handle clicking outside the bucks selection to cancel
+        function outsideClickListener(event) {
+            const bucksSelection = document.getElementById('bucks-selection');
+            if (!bucksSelection.contains(event.target)) {
+                bucksSelection.style.display = 'none';
+                myPlayer.selectedCard = null;
+                myPlayer.selectedBucks = 0;
+                socket.emit('playerAction', {
+                    action: 'cancelSelection',
+                });
+                document.removeEventListener('click', outsideClickListener);
+            }
+        }
+
+        // Update game information such as LP and Bucks
+        function updateGameInfo() {
+            document.getElementById('player1-lp').innerText = gameState.player1.lp;
+            document.getElementById('player1-bucks').innerText = gameState.player1.bucks;
+            document.getElementById('player2-lp').innerText = gameState.player2.lp;
+            document.getElementById('player2-bucks').innerText = gameState.player2.bucks;
+        }
+
+        // Display a temporary turn indicator message
+        function displayTurnIndicator(text) {
+            const indicator = document.createElement('div');
+            indicator.className = 'turn-indicator';
+            indicator.innerText = text;
+            document.body.appendChild(indicator);
+            setTimeout(() => {
+                document.body.removeChild(indicator);
+            }, 2000);
+        }
+
+        // Handle and display the result of a battle
+        function handleBattleResult(battleResult) {
+            const attackerPlayer = battleResult.attackerId === myPlayer.id ? myPlayer : opponentPlayer;
+            const defenderPlayer = battleResult.attackerId === myPlayer.id ? opponentPlayer : myPlayer;
+
+            const attackerCardDiv = document.querySelector(`#player${attackerPlayer === gameState.player1 ? '1' : '2'}-cards .card[data-index="${battleResult.attackerCardIndex}"]`);
+            const defenderCardDiv = document.querySelector(`#player${defenderPlayer === gameState.player1 ? '1' : '2'}-cards .card[data-index="${battleResult.defenderCardIndex}"]`);
+
+            // Display battle result message
+            const battleResultDiv = document.getElementById('battle-result');
+            if (battleResult.winner === 'attacker') {
+                battleResultDiv.innerText = `${attackerPlayer.name} Wins!`;
+            } else if (battleResult.winner === 'defender') {
+                battleResultDiv.innerText = `${defenderPlayer.name} Wins!`;
+            } else {
+                battleResultDiv.innerText = `It's a Tie!`;
+            }
+
+            // Log the battle result on the client side
+            console.log('Battle Result:', battleResult);
+
+            // Clear the battle result message after animation
+            setTimeout(() => {
+                battleResultDiv.innerText = '';
+            }, 2000);
+        }
+
+        // Determine the winner based on remaining LP and Bucks
+        function determineWinner() {
+            if (myPlayer.lp > opponentPlayer.lp) {
+                return myPlayer;
+            } else if (opponentPlayer.lp > myPlayer.lp) {
+                return opponentPlayer;
+            } else {
+                // If tied, decide based on bucks or declare Player 1 as winner
+                if (myPlayer.bucks > opponentPlayer.bucks) {
+                    return myPlayer;
+                } else if (opponentPlayer.bucks > myPlayer.bucks) {
+                    return opponentPlayer;
+                } else {
+                    // For simplicity, declare Player 1 as winner in case of a tie
+                    return gameState.player1;
+                }
+            }
+        }
+
+        // Display the game over screen
+        function displayGameOver(winner) {
+            const winnerArea = winner === myPlayer ? document.getElementById('my-player-area') : document.getElementById('opponent-player-area');
+            winnerArea.classList.add('game-over-winner');
+
+            // Show a notification for game over
+            showNotification(`Game Over! ${winner.name} Wins!`);
+        }
+
+        // Show a notification modal with a message
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            const notificationMessage = document.getElementById('notification-message');
+            notificationMessage.innerText = message;
+            notification.style.display = 'block';
+        }
+
+        // Close the notification modal
+        function closeNotification() {
+            const notification = document.getElementById('notification');
+            notification.style.display = 'none';
+        }
+    </script>
+
+</body>
+</html>
