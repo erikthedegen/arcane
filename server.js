@@ -3,18 +3,114 @@ const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config();
+
+
+// Supabase client initialization
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+
+// Check if Supabase URL and Key are provided
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Supabase URL and Key must be provided in the .env file.');
+  process.exit(1); // Exit the application if not provided
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 app.use(express.static(path.join(__dirname)));
+app.use(express.json()); // To parse JSON bodies
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// API endpoint to get all cards
+app.get('/api/cards', (req, res) => {
+  res.json(globalGameState.allCards);
+});
+
+// API endpoint to get user's decks
+app.get('/api/decks', async (req, res) => {
+  const user = req.query.user;
+  if (!user) {
+    return res.status(400).json({ error: 'User is required' });
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('decks')
+      .select('*')
+      .eq('user', user);
+
+    if (error) {
+      console.error('Error fetching decks:', error);
+      return res.status(500).json({ error: 'Error fetching decks' });
+    }
+
+    res.json(data);
+  } catch (err) {
+    console.error('Server error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// API endpoint to create/update a deck
+app.post('/api/decks', async (req, res) => {
+  const { user, deckName, cards, deckId } = req.body;
+
+  if (!user || !deckName || !cards || !Array.isArray(cards)) {
+    return res.status(400).json({ error: 'Invalid request data' });
+  }
+
+  if (cards.length !== 8) {
+    return res.status(400).json({ error: 'Deck must contain exactly 8 cards' });
+  }
+
+  try {
+    if (deckId) {
+      // Update existing deck
+      const { data, error } = await supabase
+        .from('decks')
+        .update({ name: deckName, cards })
+        .eq('id', deckId)
+        .eq('user', user);
+
+      if (error) {
+        console.error('Error updating deck:', error);
+        return res.status(500).json({ error: 'Error updating deck' });
+      }
+
+      res.json({ message: 'Deck updated successfully', deckId });
+    } else {
+      // Create new deck
+      const { data, error } = await supabase
+        .from('decks')
+        .insert([{ user, name: deckName, cards }])
+        .select();
+
+      if (error) {
+        console.error('Error creating deck:', error);
+        return res.status(500).json({ error: 'Error creating deck' });
+      }
+
+      res.json({ message: 'Deck created successfully', deckId: data[0].id });
+    }
+  } catch (err) {
+    console.error('Server error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Object to keep track of connected players
 const players = {};
 
-// Game state object
-const gameState = {
+// Game states for multiple games
+const games = {};
+
+// Global game state (cards and other global data)
+const globalGameState = {
   allCards: [
     // Era 1 Cards
     { name: 'Mr. Potato', era: 'Era 1', strength: 6, damage: 4, ability: 'Potato Shield', abilityDesc: 'Reduce incoming damage by 2', image: 'Mr. Potatoe.png' },
@@ -41,21 +137,16 @@ const gameState = {
     { name: 'Dishspencer', era: 'Era 4', strength: 4, damage: 6, ability: 'Dish Throw', abilityDesc: 'Opponent loses 2 LP', image: 'Dishspencer.png' },
     { name: 'Chairman', era: 'Era 4', strength: 3, damage: 7, ability: 'Heavy Seat', abilityDesc: 'Opponent loses 1 Buck', image: 'Chairman.png' },
   ],
-  player1: null,
-  player2: null,
-  currentPlayer: null,
-  selectionPhase: 'attacker',
-  gameOver: false,
-  startingPlayer: null,
-  battleResult: null,
-  round: 1, // Track the current round (max 4)
 };
+
+// Matchmaking queue
+const matchmakingQueue = [];
 
 // Socket.io Connection Handling
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
 
-  // Handle player joining the game
+  // Handle player login (joinGame)
   socket.on('joinGame', (playerChoice) => {
     try {
       if (playerChoice !== 'senf' && playerChoice !== 'börek') {
@@ -64,34 +155,79 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // Assign player to player1 or player2
-      if (!gameState.player1) {
-        gameState.player1 = initializePlayer(playerChoice, socket.id);
-        players[socket.id] = gameState.player1;
-        socket.emit('playerData', { playerName: playerChoice, playerId: socket.id });
-        console.log(`${playerChoice} joined as Player 1.`);
-      } else if (!gameState.player2) {
-        gameState.player2 = initializePlayer(playerChoice, socket.id);
-        players[socket.id] = gameState.player2;
-        socket.emit('playerData', { playerName: playerChoice, playerId: socket.id });
-        console.log(`${playerChoice} joined as Player 2.`);
+      // Assign player name
+      players[socket.id] = {
+        name: playerChoice,
+        id: socket.id,
+        gameId: null,
+      };
 
-        // Start the game when both players have joined
-        startGame();
-      } else {
-        socket.emit('gameFull');
-        console.warn(`Game full. Player ${playerChoice} (${socket.id}) cannot join.`);
-      }
+      socket.emit('playerData', { playerName: playerChoice, playerId: socket.id });
+      console.log(`${playerChoice} logged in.`);
     } catch (error) {
       console.error('Error in joinGame:', error);
       socket.emit('error', 'An error occurred while joining the game.');
     }
   });
 
+  // Handle findMatch event
+  socket.on('findMatch', async (data) => {
+    try {
+      const { user, deckId } = data;
+
+      if (!user || !deckId) {
+        socket.emit('error', 'User and deckId are required for matchmaking.');
+        return;
+      }
+
+      // Fetch the deck from Supabase
+      const { data: deckData, error } = await supabase
+        .from('decks')
+        .select('*')
+        .eq('id', deckId)
+        .eq('user', user)
+        .single();
+
+      if (error || !deckData) {
+        socket.emit('error', 'Deck not found.');
+        return;
+      }
+
+      // Add player to matchmaking queue
+      matchmakingQueue.push({
+        socket,
+        user,
+        deck: deckData,
+        socketId: socket.id,
+      });
+
+      console.log(`Player ${user} joined matchmaking queue.`);
+
+      // Check if there are at least two players in the queue
+      if (matchmakingQueue.length >= 2) {
+        // Remove the first two players from the queue and start a game
+        const player1 = matchmakingQueue.shift();
+        const player2 = matchmakingQueue.shift();
+
+        startGameWithPlayers(player1, player2);
+      }
+    } catch (error) {
+      console.error('Error in findMatch:', error);
+      socket.emit('error', 'An error occurred while finding a match.');
+    }
+  });
+
   // Handle player actions (e.g., selecting cards, boosting with bucks)
   socket.on('playerAction', (data) => {
     try {
-      handlePlayerAction(socket.id, data);
+      const player = players[socket.id];
+      if (!player) {
+        console.warn('Player not found.');
+        return;
+      }
+
+      const gameId = player.gameId;
+      handlePlayerAction(socket.id, data, gameId);
     } catch (error) {
       console.error('Error in playerAction:', error);
       socket.emit('error', 'An error occurred while processing your action.');
@@ -101,11 +237,30 @@ io.on('connection', (socket) => {
   // Handle player disconnection
   socket.on('disconnect', () => {
     console.log('A user disconnected:', socket.id);
+
+    // Remove from matchmaking queue
+    const index = matchmakingQueue.findIndex(p => p.socketId === socket.id);
+    if (index !== -1) {
+      matchmakingQueue.splice(index, 1);
+      console.log(`Player ${socket.id} removed from matchmaking queue.`);
+    }
+
     if (players[socket.id]) {
-      const disconnectedPlayer = players[socket.id].name;
+      const player = players[socket.id];
+      const gameId = player.gameId;
+
+      if (gameId && games[gameId]) {
+        const gameState = games[gameId];
+        const opponentSocketId = player === gameState.player1 ? gameState.player2.id : gameState.player1.id;
+
+        // Notify opponent
+        io.to(opponentSocketId).emit('playerDisconnected', `${player.name} has left the game.`);
+
+        // Clean up
+        delete games[gameId];
+      }
+
       delete players[socket.id];
-      io.emit('playerDisconnected', `${disconnectedPlayer} has left the game.`);
-      resetGameState();
     }
   });
 });
@@ -123,35 +278,67 @@ function initializePlayer(name, id) {
   return {
     name,
     id,
-    lp: 12, // Reduced from 15 to 12
-    bucks: 12, // Reduced from 15 to 12
-    field: [], // Each player will have exactly 4 cards on the field
+    lp: 12,
+    bucks: 12,
+    field: [],
     selectedCard: null,
     selectedBucks: 0,
     tempVariables: {},
+    gameId: null,
+    deck: null,
   };
 }
 
-// Reset the game state to initial conditions
-function resetGameState() {
-  gameState.player1 = null;
-  gameState.player2 = null;
-  gameState.currentPlayer = null;
-  gameState.selectionPhase = 'attacker';
-  gameState.gameOver = false;
-  gameState.startingPlayer = null;
-  gameState.battleResult = null;
-  gameState.round = 1;
-  console.log('Game state has been reset.');
+// Start game with two players
+function startGameWithPlayers(player1Data, player2Data) {
+  const gameId = generateGameId(); // Implement a function to generate unique game IDs
+
+  const player1 = initializePlayer(player1Data.user, player1Data.socketId);
+  const player2 = initializePlayer(player2Data.user, player2Data.socketId);
+
+  player1.deck = player1Data.deck;
+  player2.deck = player2Data.deck;
+
+  // Create game state for this game
+  const gameState = {
+    allCards: [...globalGameState.allCards], // Copy of all cards
+    player1,
+    player2,
+    currentPlayer: null,
+    selectionPhase: 'attacker',
+    gameOver: false,
+    startingPlayer: null,
+    battleResult: null,
+    round: 1,
+  };
+
+  games[gameId] = gameState;
+
+  // Assign gameId to players
+  player1.gameId = gameId;
+  player2.gameId = gameId;
+
+  // Save player data
+  players[player1Data.socketId] = player1;
+  players[player2Data.socketId] = player2;
+
+  // Notify players
+  player1Data.socket.emit('matchFound', { gameId, opponent: player2.name });
+  player2Data.socket.emit('matchFound', { gameId, opponent: player1.name });
+
+  // Start the game
+  startGame(gameId);
 }
 
 // Start the game by initializing decks, dealing cards, and setting the first player
-function startGame() {
+function startGame(gameId) {
+  const gameState = games[gameId];
+
   console.log('Both players have joined. Starting the game.');
 
-  // Assign exactly 4 cards to each player's field
-  gameState.player1.field = selectRandomCards(4);
-  gameState.player2.field = selectRandomCards(4);
+  // Select 4 random cards from each player's deck
+  gameState.player1.field = selectRandomCardsFromDeck(gameState.player1.deck.cards, 4, gameState);
+  gameState.player2.field = selectRandomCardsFromDeck(gameState.player2.deck.cards, 4, gameState);
 
   console.log(`Player 1 Field: ${gameState.player1.field.map(card => card.name).join(', ')}`);
   console.log(`Player 2 Field: ${gameState.player2.field.map(card => card.name).join(', ')}`);
@@ -163,25 +350,33 @@ function startGame() {
   console.log(`Starting Player: ${gameState.currentPlayer.name}`);
 
   // Emit the initial game state to both players
-  io.emit('gameStarted', gameState);
+  io.to(gameState.player1.id).emit('gameStarted', gameState);
+  io.to(gameState.player2.id).emit('gameStarted', gameState);
 }
 
-// Select a specified number of random unique cards for a player's field
-function selectRandomCards(count) {
-  const allCardsCopy = [...gameState.allCards];
+// Select a specified number of random unique cards from the player's deck
+function selectRandomCardsFromDeck(deckCards, count, gameState) {
+  const deckCardsCopy = [...deckCards];
   const selectedCards = [];
 
   for (let i = 0; i < count; i++) {
-    if (allCardsCopy.length === 0) break;
-    const randomIndex = Math.floor(Math.random() * allCardsCopy.length);
-    selectedCards.push(allCardsCopy.splice(randomIndex, 1)[0]);
+    if (deckCardsCopy.length === 0) break;
+    const randomIndex = Math.floor(Math.random() * deckCardsCopy.length);
+    const cardName = deckCardsCopy.splice(randomIndex, 1)[0];
+    const card = gameState.allCards.find(c => c.name === cardName);
+    if (card) {
+      selectedCards.push({ ...card }); // Create a copy of the card object
+    } else {
+      console.warn(`Card ${cardName} not found in allCards.`);
+    }
   }
 
   return selectedCards;
 }
 
 // Handle player actions such as selecting a card or submitting a move
-function handlePlayerAction(socketId, data) {
+function handlePlayerAction(socketId, data, gameId) {
+  const gameState = games[gameId];
   const player = players[socketId];
   const opponent = player === gameState.player1 ? gameState.player2 : gameState.player1;
 
@@ -208,6 +403,13 @@ function handlePlayerAction(socketId, data) {
         console.warn(`Invalid card selection by ${player.name}: ${data.selectedCard}`);
         return;
       }
+
+      const selectedCard = player.field[data.selectedCard];
+      if (selectedCard.used) {
+        io.to(player.id).emit('error', 'You cannot select a used card.');
+        return;
+      }
+
       player.selectedCard = data.selectedCard;
       console.log(`${player.name} selected card index ${data.selectedCard}: ${player.field[data.selectedCard].name}`);
       break;
@@ -231,7 +433,7 @@ function handlePlayerAction(socketId, data) {
       } else {
         // Resolve the battle if both players have made their selections
         if (gameState.selectionPhase === 'defender') {
-          resolveBattle();
+          resolveBattle(gameId);
         }
       }
       break;
@@ -249,11 +451,14 @@ function handlePlayerAction(socketId, data) {
   }
 
   // Emit the updated game state to both players
-  io.emit('gameState', gameState);
+  io.to(player.id).emit('gameState', gameState);
+  io.to(opponent.id).emit('gameState', gameState);
 }
 
 // Resolve the battle between selected cards
-function resolveBattle() {
+ function resolveBattle(gameId) {
+  const gameState = games[gameId];
+
   console.log(`Resolving battle for Round ${gameState.round}.`);
 
   const attackerPlayer = gameState.startingPlayer;
@@ -265,116 +470,123 @@ function resolveBattle() {
   console.log(`Attacker: ${attacker.name} (Player: ${attackerPlayer.name})`);
   console.log(`Defender: ${defender.name} (Player: ${defenderPlayer.name})`);
 
-  // Initialize temporary variables for abilities
-  attacker.tempStrength = attacker.strength;
-  defender.tempStrength = defender.strength;
+  // Initialize temporary variables
+  attacker.tempStrength = attacker.baseStrength || attacker.strength;
+  defender.tempStrength = defender.baseStrength || defender.strength;
   attacker.extraDamage = 0;
   defender.extraDamage = 0;
 
-  attackerPlayer.tempVariables = {};
-  defenderPlayer.tempVariables = {};
+  attackerPlayer.tempVariables = {
+      incomingDamageReduction: 0,
+      activeCardStrengthReduction: 0,
+  };
+  defenderPlayer.tempVariables = {
+      incomingDamageReduction: 0,
+      activeCardStrengthReduction: 0,
+  };
 
-  // Apply abilities
-  applyAbilities(attackerPlayer, defenderPlayer, attacker);
-  applyAbilities(defenderPlayer, attackerPlayer, defender);
+  // Pre-battle phase: Apply strength modifications
+  applyAbilities(attackerPlayer, defenderPlayer, attacker, 'preBattle');
+  applyAbilities(defenderPlayer, attackerPlayer, defender, 'preBattle');
 
-  // Calculate effective strengths
+  // Calculate strengths after pre-battle abilities
   let attackerStrength = attacker.tempStrength;
   let defenderStrength = defender.tempStrength;
 
-  // Apply opponent's strength reduction abilities
+  // Apply strength reductions from abilities
   if (defenderPlayer.tempVariables.activeCardStrengthReduction && !attackerPlayer.tempVariables.abilitiesIgnored) {
-    attackerStrength -= defenderPlayer.tempVariables.activeCardStrengthReduction;
-    console.log(`${attacker.name}'s strength reduced by ${defenderPlayer.tempVariables.activeCardStrengthReduction}`);
+      attackerStrength -= defenderPlayer.tempVariables.activeCardStrengthReduction;
+      console.log(`${attacker.name}'s strength reduced by ${defenderPlayer.tempVariables.activeCardStrengthReduction}`);
   }
 
   if (attackerPlayer.tempVariables.activeCardStrengthReduction && !defenderPlayer.tempVariables.abilitiesIgnored) {
-    defenderStrength -= attackerPlayer.tempVariables.activeCardStrengthReduction;
-    console.log(`${defender.name}'s strength reduced by ${attackerPlayer.tempVariables.activeCardStrengthReduction}`);
+      defenderStrength -= attackerPlayer.tempVariables.activeCardStrengthReduction;
+      console.log(`${defender.name}'s strength reduced by ${attackerPlayer.tempVariables.activeCardStrengthReduction}`);
   }
 
   // Ensure strengths are not negative
   attackerStrength = Math.max(0, attackerStrength);
   defenderStrength = Math.max(0, defenderStrength);
 
-  // Calculate total strengths with bucks boost
+  // Calculate total strengths with bucks
   const attackerTotalStrength = attackerStrength * (1 + attackerPlayer.selectedBucks);
   const defenderTotalStrength = defenderStrength * (1 + defenderPlayer.selectedBucks);
 
   console.log(`Attacker Total Strength: ${attackerTotalStrength}`);
   console.log(`Defender Total Strength: ${defenderTotalStrength}`);
 
-  // Determine battle outcome
-  let battleOutcome = ''; // 'attacker', 'defender', or 'tie'
+  // Initialize battle outcome variables
+  let battleOutcome = '';
   let damage = 0;
 
+  // Determine winner and apply abilities
   if (attackerTotalStrength > defenderTotalStrength) {
-    battleOutcome = 'attacker';
-    damage = attacker.damage + (attacker.extraDamage || 0);
+      battleOutcome = 'attacker';
+      damage = attacker.damage + (attacker.extraDamage || 0);
 
-    // Apply opponent's incoming damage reduction
-    if (defenderPlayer.tempVariables.incomingDamageReduction && !attackerPlayer.tempVariables.abilitiesIgnored) {
-      damage -= defenderPlayer.tempVariables.incomingDamageReduction;
-      console.log(`${defender.name}'s incoming damage reduced by ${defenderPlayer.tempVariables.incomingDamageReduction}`);
-    }
+      // Apply win/lose abilities
+      if (hasEraBonus(attackerPlayer)) {
+          applyAbilities(attackerPlayer, defenderPlayer, attacker, 'postWin');
+      }
+      if (hasEraBonus(defenderPlayer)) {
+          applyAbilities(defenderPlayer, attackerPlayer, defender, 'onLose');
+      }
 
-    damage = Math.max(0, damage);
-    defenderPlayer.lp -= damage;
-
-    console.log(`${attackerPlayer.name} wins the battle and deals ${damage} damage to ${defenderPlayer.name}.`);
-
-    // Check for abilities that activate on win
-    if (attackerPlayer.tempVariables.loyalCompanion) {
-      attackerPlayer.bucks += 1;
-      console.log(`${attackerPlayer.name} gains 1 extra buck due to Loyal Companion.`);
-    }
+      // Apply damage reduction
+      if (defenderPlayer.tempVariables.incomingDamageReduction) {
+          damage = Math.max(0, damage - defenderPlayer.tempVariables.incomingDamageReduction);
+      }
+      
+      defenderPlayer.lp -= damage;
+      console.log(`${attackerPlayer.name} wins the battle and deals ${damage} damage to ${defenderPlayer.name}.`);
 
   } else if (defenderTotalStrength > attackerTotalStrength) {
-    battleOutcome = 'defender';
-    damage = defender.damage + (defender.extraDamage || 0);
+      battleOutcome = 'defender';
+      damage = defender.damage + (defender.extraDamage || 0);
 
-    // Apply opponent's incoming damage reduction
-    if (attackerPlayer.tempVariables.incomingDamageReduction && !defenderPlayer.tempVariables.abilitiesIgnored) {
-      damage -= attackerPlayer.tempVariables.incomingDamageReduction;
-      console.log(`${attacker.name}'s incoming damage reduced by ${attackerPlayer.tempVariables.incomingDamageReduction}`);
-    }
+      // Apply win/lose abilities
+      if (hasEraBonus(defenderPlayer)) {
+          applyAbilities(defenderPlayer, attackerPlayer, defender, 'postWin');
+      }
+      if (hasEraBonus(attackerPlayer)) {
+          applyAbilities(attackerPlayer, defenderPlayer, attacker, 'onLose');
+      }
 
-    damage = Math.max(0, damage);
-    attackerPlayer.lp -= damage;
-
-    console.log(`${defenderPlayer.name} wins the battle and deals ${damage} damage to ${attackerPlayer.name}.`);
-
-    // Check for abilities that activate on win
-    if (defenderPlayer.tempVariables.loyalCompanion) {
-      defenderPlayer.bucks += 1;
-      console.log(`${defenderPlayer.name} gains 1 extra buck due to Loyal Companion.`);
-    }
+      // Apply damage reduction
+      if (attackerPlayer.tempVariables.incomingDamageReduction) {
+          damage = Math.max(0, damage - attackerPlayer.tempVariables.incomingDamageReduction);
+      }
+      
+      attackerPlayer.lp -= damage;
+      console.log(`${defenderPlayer.name} wins the battle and deals ${damage} damage to ${attackerPlayer.name}.`);
 
   } else {
-    battleOutcome = 'tie';
-    console.log('The battle ended in a tie. No damage dealt.');
+      battleOutcome = 'tie';
+      console.log('The battle ended in a tie. No damage dealt.');
   }
 
   // Set battleResult in gameState
   gameState.battleResult = {
-    id: Date.now(),
-    attackerCardIndex: attackerPlayer.selectedCard,
-    defenderCardIndex: defenderPlayer.selectedCard,
-    winner: battleOutcome, // 'attacker', 'defender', or 'tie'
-    damageDealt: damage,
-    lpChanges: {
-      [attackerPlayer.id]: attackerPlayer.lp,
-      [defenderPlayer.id]: defenderPlayer.lp,
-    },
-    attackerId: attackerPlayer.id,
-    defenderId: defenderPlayer.id,
+      id: Date.now(),
+      attackerCardIndex: attackerPlayer.selectedCard,
+      defenderCardIndex: defenderPlayer.selectedCard,
+      winner: battleOutcome,
+      damageDealt: damage,
+      lpChanges: {
+          [attackerPlayer.id]: attackerPlayer.lp,
+          [defenderPlayer.id]: defenderPlayer.lp,
+      },
+      attackerId: attackerPlayer.id,
+      defenderId: defenderPlayer.id,
+      attackerTotalStrength: attackerTotalStrength,
+      defenderTotalStrength: defenderTotalStrength,
+      attackerBucksBet: attackerPlayer.selectedBucks,
+      defenderBucksBet: defenderPlayer.selectedBucks,
   };
 
-  console.log('Battle Result:', gameState.battleResult);
-
-  // Remove used cards from the field (no replacements)
-  removeCardsFromField(attackerPlayer);
-  removeCardsFromField(defenderPlayer);
+  // Mark cards as used and store battle info
+  markCardAsUsed(attackerPlayer, battleOutcome === 'attacker', attackerTotalStrength);
+  markCardAsUsed(defenderPlayer, battleOutcome === 'defender', defenderTotalStrength);
 
   // Reset temporary variables
   resetPlayerTempVariables(attackerPlayer);
@@ -382,154 +594,257 @@ function resolveBattle() {
 
   // Check for game over conditions
   if (attackerPlayer.lp <= 0 || defenderPlayer.lp <= 0) {
-    gameState.gameOver = true;
-    console.log('Game Over due to LP reaching 0.');
-  } else if (gameState.round >= 4) { // 4 rounds
-    gameState.gameOver = true;
-    console.log('Game Over after 4 rounds.');
+      gameState.gameOver = true;
+      console.log('Game Over due to LP reaching 0.');
+  } else if (gameState.round >= 4) {
+      gameState.gameOver = true;
+      console.log('Game Over after 4 rounds.');
   }
 
   // Prepare for next turn
   if (!gameState.gameOver) {
-    gameState.round += 1;
-    gameState.selectionPhase = 'attacker';
-    gameState.startingPlayer = gameState.startingPlayer === gameState.player1 ? gameState.player2 : gameState.player1;
-    gameState.currentPlayer = gameState.startingPlayer;
+      gameState.round += 1;
+      gameState.selectionPhase = 'attacker';
+      gameState.startingPlayer = gameState.startingPlayer === gameState.player1 ? gameState.player2 : gameState.player1;
+      gameState.currentPlayer = gameState.startingPlayer;
 
-    // Reset selections
-    gameState.player1.selectedCard = null;
-    gameState.player2.selectedCard = null;
-    gameState.player1.selectedBucks = 0;
-    gameState.player2.selectedBucks = 0;
+      // Reset selections
+      gameState.player1.selectedCard = null;
+      gameState.player2.selectedCard = null;
+      gameState.player1.selectedBucks = 0;
+      gameState.player2.selectedBucks = 0;
 
-    console.log(`Round ${gameState.round} starts. Current Player: ${gameState.currentPlayer.name}`);
+      console.log(`Round ${gameState.round} starts. Current Player: ${gameState.currentPlayer.name}`);
   }
 
   // Emit updated game state to both players
-  io.emit('gameState', gameState);
+  io.to(gameState.player1.id).emit('gameState', gameState);
+  io.to(gameState.player2.id).emit('gameState', gameState);
 }
 
-// Apply card abilities to players and opponents
-function applyAbilities(player, opponent, card) {
-  // Abilities always activate
-  switch (card.ability) {
-    case 'Potato Shield':
-      // Reduce incoming damage by 2
-      player.tempVariables.incomingDamageReduction += 2;
-      console.log(`${player.name}'s Potato Shield reduces incoming damage by 2.`);
-      break;
+// Function to mark a card as used and store battle info
+function markCardAsUsed(player, wonBattle, totalStrength) {
+  if (player.selectedCard !== null && player.selectedCard < player.field.length) {
+    const usedCard = player.field[player.selectedCard];
+    usedCard.used = true;
+    usedCard.wonBattle = wonBattle;
+    usedCard.bucksBet = player.selectedBucks;
+    usedCard.totalStrength = totalStrength;
+  }
+  player.selectedCard = null;
+  player.selectedBucks = 0;
+}
 
-    case "Bob's Rally":
-      // Increase all Era 1 cards' strength by 1
-      player.field.forEach(c => {
-        if (c.era === 'Era 1') {
-          c.tempStrength += 1;
-          console.log(`${player.name}'s Bob's Rally increases ${c.name}'s strength by 1.`);
-        }
-      });
-      break;
 
-    case 'Loyal Companion':
-      // Gain 1 extra buck if you win
-      player.tempVariables.loyalCompanion = true;
-      console.log(`${player.name} has Loyal Companion ability active.`);
-      break;
+function hasEraBonus(player) {
+  const eraCounts = {};
+  player.field.forEach(card => {
+      eraCounts[card.era] = (eraCounts[card.era] || 0) + 1;
+  });
+  return Object.values(eraCounts).some(count => count >= 2);
+}
 
-    case 'Bone Crush':
-      // Deal 2 extra damage
-      card.extraDamage = (card.extraDamage || 0) + 2;
-      console.log(`${card.name}'s Bone Crush adds +2 damage.`);
-      break;
 
-    case 'Gas Cloud':
-      // Reduce opponent's strength by 1
-      opponent.tempVariables.activeCardStrengthReduction += 1;
-      console.log(`${opponent.name}'s card strength reduced by 1 due to Gas Cloud.`);
-      break;
+const ABILITY_TYPES = {
+  PRE_BATTLE: 'preBattle',     // Abilities that affect strength/stats before battle resolution
+  ON_LOSE: 'onLose',          // Abilities that trigger when card loses
+  POST_WIN: 'postWin',        // Abilities that trigger when card wins
+  ONGOING: 'ongoing'          // Special abilities (like Piercing Shot) that affect general rules
+};
 
-    // Era 2 Abilities
-    case 'Sound Blast':
-      card.extraDamage = (card.extraDamage || 0) + 2;
-      console.log(`${card.name}'s Sound Blast adds +2 damage.`);
-      break;
-
-    case 'Strategic Insight':
-      opponent.bucks = Math.max(0, opponent.bucks - 1);
-      console.log(`${opponent.name} loses 1 buck due to Strategic Insight.`);
-      break;
-
-    case 'Piercing Shot':
-      opponent.tempVariables.abilitiesIgnored = true;
-      console.log(`${opponent.name}'s abilities are ignored due to Piercing Shot.`);
-      break;
-
-    case 'Nut Barrage':
-      card.tempStrength += 2;
-      console.log(`${card.name}'s Nut Barrage increases strength by 2.`);
-      break;
-
-    case 'Wise Advice':
-      player.lp += 2;
-      console.log(`${player.name} gains 2 LP due to Wise Advice.`);
-      break;
-
-    // Era 3 Abilities
-    case 'Tech Savvy':
-      opponent.tempVariables.activeCardDamageReduction += 2;
-      console.log(`${opponent.name}'s damage reduced by 2 due to Tech Savvy.`);
-      break;
-
-    case 'Power Flex':
-      card.tempStrength += 3;
-      console.log(`${card.name}'s Power Flex increases strength by 3.`);
-      break;
-
-    case 'Late Night Snack':
-      player.bucks += 2;
-      console.log(`${player.name} gains 2 bucks due to Late Night Snack.`);
-      break;
-
-    case 'Feast':
-      player.lp += 2;
-      console.log(`${player.name} gains 2 LP due to Feast.`);
-      break;
-
-    case 'Flame Aura':
-      opponent.lp -= 2;
-      console.log(`${opponent.name} loses 2 LP due to Flame Aura.`);
-      break;
-
-    // Era 4 Abilities
-    case 'Layered Attack':
-      card.tempStrength *= 2;
-      console.log(`${card.name}'s Layered Attack doubles its strength.`);
-      break;
-
-    case 'Burnt Toast':
-      opponent.tempVariables.activeCardStrengthReduction += 2;
-      console.log(`${opponent.name}'s card strength reduced by 2 due to Burnt Toast.`);
-      break;
-
-    case 'Sharp Edges':
-      card.extraDamage = (card.extraDamage || 0) + 3;
-      console.log(`${card.name}'s Sharp Edges adds +3 damage.`);
-      break;
-
-    case 'Dish Throw':
-      opponent.lp -= 2;
-      console.log(`${opponent.name} loses 2 LP due to Dish Throw.`);
-      break;
-
-    case 'Heavy Seat':
-      opponent.bucks = Math.max(0, opponent.bucks - 1);
-      console.log(`${opponent.name} loses 1 buck due to Heavy Seat.`);
-      break;
-
-    default:
-      console.warn(`Unknown ability: ${card.ability}`);
-      break;
+function getAbilityType(abilityName) {
+  switch (abilityName) {
+      // Pre-battle abilities (affect strength calculations)
+      case 'Gas Cloud':         // Opponent's card loses 1 Strength
+      case 'Burnt Toast':       // Opponent's card loses 2 Strength
+      case 'Tech Savvy':        // Opponent's damage reduced by 2
+      case 'Nut Barrage':       // +2 Strength
+      case 'Power Flex':        // +3 Strength
+      case 'Layered Attack':    // Strength is doubled
+          return ABILITY_TYPES.PRE_BATTLE;
+      
+      // On-lose abilities
+      case 'Potato Shield':     // Reduce incoming damage by 2
+          return ABILITY_TYPES.ON_LOSE;
+      
+      // Post-win abilities
+      case 'Wise Advice':       // Gain 2 LP
+      case 'Feast':            // Gain 2 LP
+      case "Bob's Rally":      // All Era 1 cards gain +1 Strength
+      case 'Flame Aura':       // Enemy loses 2 LP
+      case 'Dish Throw':       // Enemy loses 2 LP
+      case 'Heavy Seat':       // Enemy loses 1 buck
+      case 'Strategic Insight': // Enemy loses 1 buck
+      case 'Loyal Companion':   // Gain 1 extra buck if you win
+      case 'Late Night Snack':  // Gain 2 Bucks
+      case 'Bone Crush':       // +2 damage
+      case 'Sound Blast':      // +2 damage
+      case 'Sharp Edges':      // +3 damage
+          return ABILITY_TYPES.POST_WIN;
+      
+      // Special cases
+      case 'Piercing Shot':    // Ignore opponent's abilities - handled separately
+          return ABILITY_TYPES.ONGOING;
+      
+      default:
+          return ABILITY_TYPES.PRE_BATTLE;
   }
 }
+
+function applyAbilities(player, opponent, card, battlePhase = 'preBattle') {
+  if (!player.tempVariables) player.tempVariables = {};
+  if (!opponent.tempVariables) opponent.tempVariables = {};
+
+  const hasEraRequirement = hasEraBonus(player);
+  if (!hasEraRequirement) {
+      console.log(`${player.name} doesn't have enough cards of the same era for abilities`);
+      return;
+  }
+
+  const abilityType = getAbilityType(card.ability);
+  
+  // Only process abilities that match the current battle phase
+  if (abilityType !== battlePhase) return;
+
+  // Check if abilities are ignored by Piercing Shot
+  if (opponent.tempVariables.abilitiesIgnored && abilityType !== ABILITY_TYPES.ONGOING) {
+      console.log(`${player.name}'s abilities are ignored due to Piercing Shot`);
+      return;
+  }
+
+  switch (card.ability) {
+      // PRE-BATTLE ABILITIES
+      case 'Gas Cloud':
+          if (battlePhase === 'preBattle') {
+              opponent.tempVariables.activeCardStrengthReduction = 
+                  (opponent.tempVariables.activeCardStrengthReduction || 0) + 1;
+              console.log(`${opponent.name}'s card base strength reduced by 1 due to Gas Cloud`);
+          }
+          break;
+
+      case 'Burnt Toast':
+          if (battlePhase === 'preBattle') {
+              opponent.tempVariables.activeCardStrengthReduction = 
+                  (opponent.tempVariables.activeCardStrengthReduction || 0) + 2;
+              console.log(`${opponent.name}'s card base strength reduced by 2 due to Burnt Toast`);
+          }
+          break;
+
+      case 'Tech Savvy':
+          if (battlePhase === 'preBattle') {
+              opponent.tempVariables.damageReduction = 
+                  (opponent.tempVariables.damageReduction || 0) + 2;
+              console.log(`${opponent.name}'s damage reduced by 2 due to Tech Savvy`);
+          }
+          break;
+
+      case 'Nut Barrage':
+          if (battlePhase === 'preBattle') {
+              card.tempStrength = (card.baseStrength || card.strength) + 2;
+              console.log(`${card.name}'s strength increased by 2 due to Nut Barrage`);
+          }
+          break;
+
+      case 'Power Flex':
+          if (battlePhase === 'preBattle') {
+              card.tempStrength = (card.baseStrength || card.strength) + 3;
+              console.log(`${card.name}'s strength increased by 3 due to Power Flex`);
+          }
+          break;
+
+      case 'Layered Attack':
+          if (battlePhase === 'preBattle') {
+              card.tempStrength = (card.baseStrength || card.strength) * 2;
+              console.log(`${card.name}'s strength doubled due to Layered Attack`);
+          }
+          break;
+
+      // ON-LOSE ABILITIES
+      case 'Potato Shield':
+          if (battlePhase === 'onLose') {
+              player.tempVariables.incomingDamageReduction = 
+                  (player.tempVariables.incomingDamageReduction || 0) + 2;
+              console.log(`${player.name}'s Potato Shield reduces incoming damage by 2`);
+          }
+          break;
+
+      // POST-WIN ABILITIES
+      case "Bob's Rally":
+          if (battlePhase === 'postWin') {
+              player.field.forEach(c => {
+                  if (c.era === 'Era 1' && !c.used) {
+                      c.baseStrength = (c.baseStrength || c.strength) + 1;
+                      console.log(`${c.name}'s base strength increased by 1 due to Bob's Rally`);
+                  }
+              });
+          }
+          break;
+
+      case 'Wise Advice':
+      case 'Feast':
+          if (battlePhase === 'postWin') {
+              player.lp += 2;
+              console.log(`${player.name} gains 2 LP from ${card.ability}`);
+          }
+          break;
+
+      case 'Flame Aura':
+      case 'Dish Throw':
+          if (battlePhase === 'postWin') {
+              opponent.lp -= 2;
+              console.log(`${opponent.name} loses 2 LP from ${card.ability}`);
+          }
+          break;
+
+      case 'Heavy Seat':
+      case 'Strategic Insight':
+          if (battlePhase === 'postWin') {
+              opponent.bucks = Math.max(0, opponent.bucks - 1);
+              console.log(`${opponent.name} loses 1 buck from ${card.ability}`);
+          }
+          break;
+
+      case 'Loyal Companion':
+          if (battlePhase === 'postWin') {
+              player.bucks += 1;
+              console.log(`${player.name} gains 1 buck from Loyal Companion`);
+          }
+          break;
+
+      case 'Late Night Snack':
+          if (battlePhase === 'postWin') {
+              player.bucks += 2;
+              console.log(`${player.name} gains 2 bucks from Late Night Snack`);
+          }
+          break;
+
+      case 'Bone Crush':
+      case 'Sound Blast':
+          if (battlePhase === 'postWin') {
+              card.extraDamage = (card.extraDamage || 0) + 2;
+              console.log(`${card.name} gains +2 damage from ${card.ability}`);
+          }
+          break;
+
+      case 'Sharp Edges':
+          if (battlePhase === 'postWin') {
+              card.extraDamage = (card.extraDamage || 0) + 3;
+              console.log(`${card.name} gains +3 damage from Sharp Edges`);
+          }
+          break;
+
+      // SPECIAL ABILITIES
+      case 'Piercing Shot':
+          opponent.tempVariables.abilitiesIgnored = true;
+          console.log(`${opponent.name}'s abilities are ignored due to Piercing Shot`);
+          break;
+
+      default:
+          console.warn(`Unknown ability: ${card.ability}`);
+          break;
+  }
+}
+
 
 // Reset temporary variables after a battle
 function resetPlayerTempVariables(player) {
@@ -541,21 +856,7 @@ function resetPlayerTempVariables(player) {
   console.log(`${player.name}'s temporary variables have been reset.`);
 }
 
-// Remove used cards from the field (no replacements)
-function removeCardsFromField(player) {
-  if (player.selectedCard < player.field.length) {
-    const removedCard = player.field.splice(player.selectedCard, 1)[0];
-    console.log(`${player.name} used card: ${removedCard.name} and it has been removed from the field.`);
-  }
-  player.selectedCard = null;
-  player.selectedBucks = 0;
-}
-
-// Shuffle an array using Fisher-Yates algorithm
-function shuffle(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-  return array;
+// Generate a unique game ID
+function generateGameId() {
+  return 'game-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
 }

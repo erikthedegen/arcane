@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Definetly not urban rivals</title>
+    <title>Definitely not Urban Rivals</title>
     <style>
         /* Improved CSS styles for better UI/UX */
 
@@ -38,6 +38,125 @@
             background-color: #45a049;
         }
 
+        /* Main Menu */
+        #main-menu {
+            margin-top: 50px;
+        }
+
+        #main-menu button {
+            padding: 15px 30px;
+            font-size: 18px;
+            margin: 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #2196F3;
+            color: white;
+            transition: background-color 0.3s;
+        }
+
+        #main-menu button:hover {
+            background-color: #0b7dda;
+        }
+
+        /* Deck Builder Styles */
+        #deck-builder {
+            margin: 20px;
+        }
+
+        .era-section {
+            margin-bottom: 30px;
+        }
+
+        .era-title {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .card-pool {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .card-select {
+            border: 1px solid #333;
+            padding: 5px;
+            margin: 5px;
+            width: 120px;
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.3s;
+            background-color: #fff;
+        }
+
+        .card-select:hover {
+            transform: scale(1.05);
+        }
+
+        .card-select.selected {
+            border-color: gold;
+            box-shadow: 0 0 10px gold;
+        }
+
+        .deck-actions {
+            margin-top: 20px;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255,255,255,0.95);
+            padding: 20px;
+            border: 2px solid #333;
+            border-radius: 10px;
+            z-index: 1000;
+        }
+
+        .modal input[type="text"] {
+            padding: 5px;
+            font-size: 16px;
+            margin-bottom: 10px;
+            width: 80%;
+        }
+
+        .modal button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        /* Notification Modal */
+        .notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255,255,255,0.95);
+            padding: 20px;
+            border: 2px solid #333;
+            border-radius: 10px;
+            z-index: 1000;
+        }
+
+        .notification p {
+            margin-bottom: 20px;
+        }
+
+        .notification button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        /* Game Board and other existing styles remain the same */
+        /* (Include existing styles from your original code) */
+
+        /* Game Board */
         .game-board {
             display: flex;
             flex-direction: column;
@@ -102,6 +221,46 @@
             background-color: #fff;
         }
 
+        .card.used {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.card .marker {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+}
+
+.era-badge {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    background-color: #f0f0f0;
+    border: 1px solid #333;
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.card .overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: rgba(0,0,0,0.7);
+  color: white;
+  padding: 5px;
+  font-size: 12px;
+  text-align: center;
+}
+
+
         .card:hover {
             transform: scale(1.05);
         }
@@ -127,25 +286,132 @@
             text-align: left;
         }
 
-        .bucks-slider {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 10px;
-        }
+        #bucks-selection {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+}
 
-        .bucks-slider .rectangle {
-            width: 30px;
-            height: 15px;
-            background-color: lightgreen;
-            margin: 2px;
-            cursor: pointer;
-            border: 1px solid #333;
-        }
+#bucks-slider {
+    background: #1a1a1a;
+    padding: 15px;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 600px;
+}
 
-        .bucks-slider .rectangle.filled {
-            background-color: green;
-        }
+.slider-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.bucks-icons-container {
+    display: flex;
+    align-items: center;
+    margin: 0 10px;
+}
+
+.buck-icon {
+    width: 32px;
+    height: 32px;
+    margin-right: -12px; /* Creates overlapping effect */
+    cursor: pointer;
+    opacity: 1;
+    transition: opacity 0.2s;
+}
+
+.buck-icon.unfilled {
+    opacity: 0.3;
+}
+
+.buck-icon:last-child {
+    margin-right: 0;
+}
+
+.control-button {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 10px;
+}
+
+.control-button:hover {
+    background: #3a3a3a;
+}
+
+.bottom-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.back-arrow {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.attack-display {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.attack-label {
+    color: white;
+    font-size: 16px;
+    text-transform: uppercase;
+}
+
+.attack-value {
+    background: #2a2a2a;
+    color: #4DA6FF;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.fight-button {
+    background: #FFD700;
+    color: #8A2BE2;
+    padding: 8px 24px;
+    border-radius: 20px;
+    font-size: 18px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+.fight-button:hover {
+    background: #FFE44D;
+}
 
         /* Battle Result Display */
         .battle-result {
@@ -222,38 +488,58 @@
             }
         }
 
-        /* Notification Modal */
-        .notification {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(255,255,255,0.95);
-            padding: 20px;
-            border: 2px solid #333;
-            border-radius: 10px;
-            z-index: 1000;
-        }
-
-        .notification p {
-            margin-bottom: 20px;
-        }
-
-        .notification button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
     </style>
 </head>
 <body>
 
-    <h1>Definetly not urban rivals</h1>
+    <h1>Definitely not Urban Rivals</h1>
 
     <!-- Login Area with Buttons -->
     <div id="login-area">
         <button class="login-button" onclick="selectPlayer('senf')">senf</button>
         <button class="login-button" onclick="selectPlayer('börek')">börek</button>
+    </div>
+
+    <!-- Main Menu -->
+    <div id="main-menu" style="display: none;">
+        <h2>Main Menu</h2>
+        <button onclick="goToDeckBuilder()">Deck Builder</button>
+        <button onclick="goToPlay()">Play</button>
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <!-- Deck Builder -->
+    <div id="deck-builder" style="display: none;">
+        <h2>Deck Builder</h2>
+        <div id="deck-list">
+            <h3>Your Decks</h3>
+            <ul id="decks-ul">
+                <!-- Decks will be listed here -->
+            </ul>
+            <button onclick="createNewDeck()">Create New Deck</button>
+            <button onclick="backToMenu()">Back to Menu</button>
+        </div>
+
+        <div id="deck-editor" style="display: none;">
+            <h3 id="deck-editor-title">Create New Deck</h3>
+            <div id="card-pool">
+                <!-- Card pool will be displayed here -->
+            </div>
+            <div class="deck-actions">
+                <p>Selected Cards: <span id="selected-count">0</span>/8</p>
+                <button onclick="saveDeck()">Save Deck</button>
+                <button onclick="cancelDeckEditing()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Play Interface -->
+    <div id="play-interface" style="display: none;">
+        <h2>Select a Deck to Play</h2>
+        <ul id="play-decks-ul">
+            <!-- Decks will be listed here -->
+        </ul>
+        <button onclick="backToMenu()">Back to Menu</button>
     </div>
 
     <!-- Game Board -->
@@ -262,19 +548,25 @@
     </div>
 
     <!-- Action Area for Bucks Selection -->
-    <div id="action-area">
-        <div id="bucks-selection" style="display: none;">
-            <p>Select Bucks to Boost Strength:</p>
-            <div class="bucks-slider" id="bucks-slider"></div>
-            <p><span id="bucks-selected">0</span> / <span id="bucks-total">12</span></p>
-            <button onclick="submitMove()">Submit</button>
-        </div>
+<div id="action-area">
+    <div id="bucks-selection" style="display: none;">
+        <div class="bucks-slider" id="bucks-slider"></div>
     </div>
+</div>
 
     <!-- Notification Modal -->
     <div id="notification" class="notification" style="display: none;">
         <p id="notification-message"></p>
         <button onclick="closeNotification()">OK</button>
+    </div>
+
+    <!-- Modal for Deck Name Input -->
+    <div id="deck-name-modal" class="modal" style="display: none;">
+        <p>Enter Deck Name:</p>
+        <input type="text" id="deck-name-input" placeholder="Deck Name">
+        <br>
+        <button onclick="confirmSaveDeck()">Save</button>
+        <button onclick="closeDeckNameModal()">Cancel</button>
     </div>
 
     <!-- Include Socket.io -->
@@ -292,6 +584,12 @@
         let gameOver = false;
         let lastBattleResultId = null;
 
+        // Deck Builder Variables
+        let allCards = [];
+        let selectedCards = [];
+        let decks = [];
+        let editingDeckId = null;
+
         // Initialize Socket.io
         const socket = io();
 
@@ -305,6 +603,7 @@
         socket.on('playerData', (data) => {
             console.log('Received playerData:', data);
             playerName = data.playerName;
+            showMainMenu();
         });
 
         // Handle game full scenario
@@ -318,6 +617,12 @@
             setTimeout(() => {
                 location.reload();
             }, 3000); // Reload after 3 seconds
+        });
+
+        // Handle match found
+        socket.on('matchFound', (data) => {
+            console.log('Match found:', data);
+            // Waiting for game to start
         });
 
         // Handle game start
@@ -345,11 +650,305 @@
             console.log(`Player selected: ${choice}`);
         }
 
+        // Show Main Menu
+        function showMainMenu() {
+            document.getElementById('main-menu').style.display = 'block';
+        }
+
+        // Go to Deck Builder
+        function goToDeckBuilder() {
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('deck-builder').style.display = 'block';
+            loadDecks();
+        }
+
+        // Go to Play Interface
+        function goToPlay() {
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('play-interface').style.display = 'block';
+            loadPlayDecks();
+        }
+
+        // Logout
+        function logout() {
+            location.reload();
+        }
+
+        // Back to Main Menu
+        function backToMenu() {
+            document.getElementById('deck-builder').style.display = 'none';
+            document.getElementById('play-interface').style.display = 'none';
+            document.getElementById('main-menu').style.display = 'block';
+        }
+
+        // Load Decks from Server
+        async function loadDecks() {
+            try {
+                const response = await fetch(`/api/decks?user=${encodeURIComponent(playerName)}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch decks');
+                }
+                decks = await response.json();
+                renderDeckList();
+            } catch (error) {
+                showNotification('Error loading decks: ' + error.message);
+            }
+        }
+
+        // Render Deck List
+        function renderDeckList() {
+            const decksUl = document.getElementById('decks-ul');
+            decksUl.innerHTML = '';
+            decks.forEach(deck => {
+                const li = document.createElement('li');
+                li.innerText = deck.name;
+                li.onclick = () => editDeck(deck.id);
+                decksUl.appendChild(li);
+            });
+        }
+
+        // Create New Deck
+        async function createNewDeck() {
+            selectedCards = [];
+            editingDeckId = null;
+            document.getElementById('deck-list').style.display = 'none';
+            document.getElementById('deck-editor-title').innerText = 'Create New Deck';
+            document.getElementById('deck-editor').style.display = 'block';
+            await loadAllCards();
+            renderCardPool();
+            updateSelectedCount();
+        }
+
+        // Edit Existing Deck
+        async function editDeck(deckId) {
+            const deck = decks.find(d => d.id === deckId);
+            if (!deck) {
+                showNotification('Deck not found.');
+                return;
+            }
+            selectedCards = deck.cards.slice(); // Copy the array
+            editingDeckId = deckId;
+            document.getElementById('deck-list').style.display = 'none';
+            document.getElementById('deck-editor-title').innerText = `Edit Deck: ${deck.name}`;
+            document.getElementById('deck-editor').style.display = 'block';
+            await loadAllCards();
+            renderCardPool();
+            updateSelectedCount();
+        }
+
+        // Cancel Deck Editing
+        function cancelDeckEditing() {
+            selectedCards = [];
+            editingDeckId = null;
+            document.getElementById('deck-editor').style.display = 'none';
+            document.getElementById('deck-list').style.display = 'block';
+        }
+
+        // Load All Cards
+        async function loadAllCards() {
+            if (allCards.length > 0) return; // Already loaded
+            try {
+                const response = await fetch('/api/cards');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch cards');
+                }
+                allCards = await response.json();
+            } catch (error) {
+                showNotification('Error loading cards: ' + error.message);
+            }
+        }
+
+        // Render Card Pool
+        function renderCardPool() {
+            const cardPoolDiv = document.getElementById('card-pool');
+            cardPoolDiv.innerHTML = '';
+
+            const eras = {};
+            allCards.forEach(card => {
+                if (!eras[card.era]) {
+                    eras[card.era] = [];
+                }
+                eras[card.era].push(card);
+            });
+
+            for (const era in eras) {
+                const eraSection = document.createElement('div');
+                eraSection.className = 'era-section';
+
+                const eraTitle = document.createElement('h3');
+                eraTitle.className = 'era-title';
+                eraTitle.innerText = era;
+                eraSection.appendChild(eraTitle);
+
+                const cardPool = document.createElement('div');
+                cardPool.className = 'card-pool';
+
+                eras[era].forEach(card => {
+                    const cardDiv = createCardSelectDiv(card);
+                    cardPool.appendChild(cardDiv);
+                });
+
+                eraSection.appendChild(cardPool);
+                cardPoolDiv.appendChild(eraSection);
+            }
+        }
+
+        // Create Card Select Div
+        function createCardSelectDiv(card) {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'card-select';
+            cardDiv.dataset.name = card.name;
+
+            // Card Image
+            const img = document.createElement('img');
+            img.src = card.image;
+            img.alt = card.name;
+            img.width = 100;
+            img.height = 100;
+            cardDiv.appendChild(img);
+
+            // Card Name
+            const nameElem = document.createElement('div');
+            nameElem.innerHTML = `<strong>${card.name}</strong>`;
+            cardDiv.appendChild(nameElem);
+
+            // Card Stats
+            const statsDiv = document.createElement('div');
+            statsDiv.className = 'stats';
+            statsDiv.innerHTML = `
+                Strength: ${card.strength}<br>
+                Damage: ${card.damage}<br>
+                Ability: ${card.abilityDesc}
+            `;
+            cardDiv.appendChild(statsDiv);
+
+            // Highlight if selected
+            if (selectedCards.includes(card.name)) {
+                cardDiv.classList.add('selected');
+            }
+
+            // Click handler
+            cardDiv.onclick = () => toggleCardSelection(card.name, cardDiv);
+
+            return cardDiv;
+        }
+
+        // Toggle Card Selection
+        function toggleCardSelection(cardName, cardDiv) {
+            if (selectedCards.includes(cardName)) {
+                selectedCards = selectedCards.filter(name => name !== cardName);
+                cardDiv.classList.remove('selected');
+            } else {
+                if (selectedCards.length >= 8) {
+                    showNotification('You can select up to 8 cards.');
+                    return;
+                }
+                selectedCards.push(cardName);
+                cardDiv.classList.add('selected');
+            }
+            updateSelectedCount();
+        }
+
+        // Update Selected Count
+        function updateSelectedCount() {
+            document.getElementById('selected-count').innerText = selectedCards.length;
+        }
+
+        // Save Deck
+        function saveDeck() {
+            if (selectedCards.length !== 8) {
+                showNotification('You must select exactly 8 cards.');
+                return;
+            }
+            document.getElementById('deck-name-modal').style.display = 'block';
+        }
+
+        // Confirm Save Deck
+        async function confirmSaveDeck() {
+            const deckName = document.getElementById('deck-name-input').value.trim();
+            if (!deckName) {
+                showNotification('Please enter a deck name.');
+                return;
+            }
+
+            const deckData = {
+                user: playerName,
+                deckName,
+                cards: selectedCards,
+                deckId: editingDeckId,
+            };
+
+            try {
+                const response = await fetch('/api/decks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(deckData),
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to save deck');
+                }
+                showNotification(result.message);
+                closeDeckNameModal();
+                cancelDeckEditing();
+                loadDecks();
+            } catch (error) {
+                showNotification('Error saving deck: ' + error.message);
+            }
+        }
+
+        // Close Deck Name Modal
+        function closeDeckNameModal() {
+            document.getElementById('deck-name-modal').style.display = 'none';
+            document.getElementById('deck-name-input').value = '';
+        }
+
+        // Load Decks for Play
+        async function loadPlayDecks() {
+            try {
+                const response = await fetch(`/api/decks?user=${encodeURIComponent(playerName)}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch decks');
+                }
+                decks = await response.json();
+                renderPlayDecks();
+            } catch (error) {
+                showNotification('Error loading decks: ' + error.message);
+            }
+        }
+
+        // Render Play Decks
+        function renderPlayDecks() {
+            const playDecksUl = document.getElementById('play-decks-ul');
+            playDecksUl.innerHTML = '';
+            decks.forEach(deck => {
+                const li = document.createElement('li');
+                li.innerText = deck.name;
+                li.onclick = () => selectDeckForPlay(deck.id);
+                playDecksUl.appendChild(li);
+            });
+        }
+
+        // Select Deck for Play
+        function selectDeckForPlay(deckId) {
+            const selectedDeck = decks.find(d => d.id === deckId);
+            if (!selectedDeck) {
+                showNotification('Deck not found.');
+                return;
+            }
+            // Start matchmaking
+            socket.emit('findMatch', { user: playerName, deckId });
+            showNotification('Finding a match...');
+        }
+
         // Initialize the game UI after both players have joined
         function initializeGame() {
-            // Hide login area and show game board
+            // Hide other interfaces and show game board
             document.getElementById('game-board').style.display = 'flex';
             document.getElementById('login-area').style.display = 'none';
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('deck-builder').style.display = 'none';
+            document.getElementById('play-interface').style.display = 'none';
 
             // Update local references to players
             if (playerId === gameState.player1.id) {
@@ -478,13 +1077,13 @@
 
             // Render my cards
             myPlayer.field.forEach((card, index) => {
-                const cardDiv = createCardDiv(card, index, myPlayer);
+                const cardDiv = createCardDiv(card, index, myPlayer, true);
                 myCardsDiv.appendChild(cardDiv);
             });
 
             // Render opponent's cards
             opponentPlayer.field.forEach((card, index) => {
-                const cardDiv = createCardDiv(card, index, opponentPlayer);
+                const cardDiv = createCardDiv(card, index, opponentPlayer, false);
                 opponentCardsDiv.appendChild(cardDiv);
             });
 
@@ -499,31 +1098,31 @@
             cardDiv.className = 'card';
             cardDiv.dataset.index = index;
 
-            // Era Indicator
-            const eraCircle = document.createElement('div');
-            eraCircle.className = 'era-circle';
-            let eraColor = '';
-            switch (card.era) {
-                case 'Era 1':
-                    eraColor = 'blue';
-                    break;
-                case 'Era 2':
-                    eraColor = 'red';
-                    break;
-                case 'Era 3':
-                    eraColor = 'green';
-                    break;
-                case 'Era 4':
-                    eraColor = 'black';
-                    break;
-                default:
-                    eraColor = 'gray';
-            }
-            eraCircle.style.backgroundColor = eraColor;
-            cardDiv.appendChild(eraCircle);
+// Era Badge
+const eraBadge = document.createElement('div');
+eraBadge.className = 'era-badge';
+let eraText = '';
+switch (card.era) {
+    case 'Era 1':
+        eraText = 'I';
+        break;
+    case 'Era 2':
+        eraText = 'II';
+        break;
+    case 'Era 3':
+        eraText = 'III';
+        break;
+    case 'Era 4':
+        eraText = 'IV';
+        break;
+    default:
+        eraText = '?';
+}
+eraBadge.textContent = eraText;
+cardDiv.appendChild(eraBadge);
 
-            // Card Image
-            const img = document.createElement('img');
+// Card Image
+const img = document.createElement('img');
             img.src = card.image;
             img.alt = card.name;
             img.width = 100;
@@ -559,6 +1158,56 @@
                 cardDiv.classList.add('disabled');
             }
 
+          // Handle used cards
+  if (card.used) {
+    cardDiv.classList.add('used');
+    cardDiv.style.opacity = '0.5';
+
+    // Add marker for win/loss
+    const marker = document.createElement('div');
+    marker.className = 'marker';
+    marker.style.backgroundColor = card.wonBattle ? 'green' : 'red';
+    cardDiv.appendChild(marker);
+
+    // Add overlay with battle details
+    const overlay = document.createElement('div');
+    overlay.className = 'overlay';
+    overlay.innerHTML = `
+      Bucks Bet: ${card.bucksBet}<br>
+      Total Strength: ${card.totalStrength}
+    `;
+    cardDiv.appendChild(overlay);
+  }
+
+  // Disable click on used cards
+  if (card.used || player.id !== playerId || gameState.currentPlayer.id !== playerId || player.selectedCard !== null) {
+    cardDiv.classList.add('disabled');
+  } else {
+    cardDiv.onclick = () => selectCard(index);
+  }
+
+  return cardDiv;
+}
+
+        // Create a hidden card element for the opponent
+        function createHiddenCardDiv(index, player) {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'card disabled';
+            cardDiv.dataset.index = index;
+
+            // Hidden Card Image
+            const img = document.createElement('img');
+            img.src = 'back_of_card.png'; // Placeholder image for the back of the card
+            img.alt = 'Hidden Card';
+            img.width = 100;
+            img.height = 100;
+            cardDiv.appendChild(img);
+
+            // Card Name
+            const nameElem = document.createElement('div');
+            nameElem.innerHTML = `<strong>Hidden</strong>`;
+            cardDiv.appendChild(nameElem);
+
             return cardDiv;
         }
 
@@ -586,41 +1235,138 @@
 
         // Create the bucks slider with clickable rectangles
         function createBucksSlider() {
-            const slider = document.getElementById('bucks-slider');
-            slider.innerHTML = ''; // Clear previous sliders
-            const totalBucks = myPlayer.bucks;
-            document.getElementById('bucks-total').innerText = totalBucks;
-            document.getElementById('bucks-selected').innerText = '0';
+    const slider = document.getElementById('bucks-slider');
+    slider.innerHTML = '';
+    const totalBucks = myPlayer.bucks;
 
-            for (let i = 1; i <= totalBucks; i++) {
-                const rect = document.createElement('div');
-                rect.className = 'rectangle';
-                rect.dataset.value = i;
-                rect.onclick = handleSliderClick;
-                slider.appendChild(rect);
-            }
-        }
+    // Create main container
+    const sliderControls = document.createElement('div');
+    sliderControls.className = 'slider-controls';
 
-        // Handle clicking on the bucks slider
-        function handleSliderClick(event) {
-            const value = parseInt(event.target.dataset.value);
-            setSliderValue(value);
-        }
+    // Minus button
+    const minusBtn = document.createElement('button');
+    minusBtn.className = 'control-button';
+    minusBtn.innerHTML = '−';
+    minusBtn.onclick = () => adjustBucks(-1);
+    sliderControls.appendChild(minusBtn);
 
-        // Set the selected bucks value
-        function setSliderValue(value) {
-            const rectangles = document.querySelectorAll('.bucks-slider .rectangle');
-            rectangles.forEach(rect => {
-                const rectValue = parseInt(rect.dataset.value);
-                if (rectValue <= value) {
-                    rect.classList.add('filled');
-                } else {
-                    rect.classList.remove('filled');
-                }
-            });
-            document.getElementById('bucks-selected').innerText = value;
-            myPlayer.selectedBucks = value;
+    // Icons container
+    const iconsContainer = document.createElement('div');
+    iconsContainer.className = 'bucks-icons-container';
+    
+    // Create buck icons
+    for (let i = 0; i <= totalBucks; i++) {
+        const icon = document.createElement('img');
+        icon.src = 'bucksicon.png'; // Make sure this image exists in your assets
+        icon.className = 'buck-icon';
+        if (i > 0) {
+            icon.classList.add('unfilled');
         }
+        icon.dataset.value = i;
+        icon.onclick = () => setSliderValue(i);
+        icon.onmouseenter = (e) => handleMouseEnter(e, i);
+        iconsContainer.appendChild(icon);
+    }
+    sliderControls.appendChild(iconsContainer);
+
+    // Plus button
+    const plusBtn = document.createElement('button');
+    plusBtn.className = 'control-button';
+    plusBtn.innerHTML = '+';
+    plusBtn.onclick = () => adjustBucks(1);
+    sliderControls.appendChild(plusBtn);
+
+    slider.appendChild(sliderControls);
+
+    // Bottom controls container
+    const bottomControls = document.createElement('div');
+    bottomControls.className = 'bottom-controls';
+
+    // Back arrow (left side)
+    const backArrow = document.createElement('button');
+    backArrow.className = 'back-arrow';
+    backArrow.innerHTML = '←';
+    backArrow.onclick = () => {
+        document.getElementById('bucks-selection').style.display = 'none';
+        myPlayer.selectedCard = null;
+        myPlayer.selectedBucks = 0;
+        socket.emit('playerAction', { action: 'cancelSelection' });
+    };
+
+    // Attack display
+    const attackDisplay = document.createElement('div');
+    attackDisplay.className = 'attack-display';
+    
+    const attackLabel = document.createElement('span');
+    attackLabel.className = 'attack-label';
+    attackLabel.textContent = 'ATTACK';
+    
+    const attackValue = document.createElement('div');
+    attackValue.className = 'attack-value';
+    attackValue.id = 'attack-value';
+    // Set initial attack value based on base strength
+    const selectedCard = myPlayer.field[myPlayer.selectedCard];
+    const baseStrength = selectedCard.baseStrength || selectedCard.strength;
+    attackValue.textContent = baseStrength;
+    
+    attackDisplay.appendChild(attackLabel);
+    attackDisplay.appendChild(attackValue);
+
+    // Fight button
+    const fightBtn = document.createElement('button');
+    fightBtn.className = 'fight-button';
+    fightBtn.textContent = 'FIGHT';
+    fightBtn.onclick = submitMove;
+
+    // Add all elements to bottom controls
+    bottomControls.appendChild(backArrow);
+    bottomControls.appendChild(attackDisplay);
+    bottomControls.appendChild(fightBtn);
+
+    slider.appendChild(bottomControls);
+
+    // Add mouse drag functionality
+    let isMouseDown = false;
+    iconsContainer.addEventListener('mousedown', () => isMouseDown = true);
+    document.addEventListener('mouseup', () => isMouseDown = false);
+    document.addEventListener('mouseleave', () => isMouseDown = false);
+
+    // Initialize with no bucks selected
+    setSliderValue(0);
+}
+
+function calculateAttackValue(selectedBucks) {
+    const selectedCard = myPlayer.field[myPlayer.selectedCard];
+    const baseStrength = selectedCard.baseStrength || selectedCard.strength;
+    return baseStrength * (1 + selectedBucks);
+}
+
+function handleMouseEnter(event, value) {
+    if (event.buttons === 1) { // Left mouse button is being held
+        setSliderValue(value);
+    }
+}
+
+function adjustBucks(change) {
+    const currentValue = myPlayer.selectedBucks || 0;
+    const newValue = Math.max(0, Math.min(myPlayer.bucks, currentValue + change));
+    setSliderValue(newValue);
+}
+
+function setSliderValue(value) {
+    const icons = document.querySelectorAll('.buck-icon');
+    icons.forEach((icon, index) => {
+        if (index <= value) {
+            icon.classList.remove('unfilled');
+        } else {
+            icon.classList.add('unfilled');
+        }
+    });
+    
+    myPlayer.selectedBucks = value;
+    const attackValue = calculateAttackValue(value);
+    document.getElementById('attack-value').textContent = attackValue;
+}
 
         // Submit the selected move with the chosen bucks
         function submitMove() {
@@ -680,12 +1426,14 @@
             const attackerCardDiv = document.querySelector(`#player${attackerPlayer === gameState.player1 ? '1' : '2'}-cards .card[data-index="${battleResult.attackerCardIndex}"]`);
             const defenderCardDiv = document.querySelector(`#player${defenderPlayer === gameState.player1 ? '1' : '2'}-cards .card[data-index="${battleResult.defenderCardIndex}"]`);
 
+            
+
             // Display battle result message
             const battleResultDiv = document.getElementById('battle-result');
             if (battleResult.winner === 'attacker') {
-                battleResultDiv.innerText = `${attackerPlayer.name} Wins!`;
+                battleResultDiv.innerText = `${attackerPlayer.username} Wins!`;
             } else if (battleResult.winner === 'defender') {
-                battleResultDiv.innerText = `${defenderPlayer.name} Wins!`;
+                battleResultDiv.innerText = `${defenderPlayer.username} Wins!`;
             } else {
                 battleResultDiv.innerText = `It's a Tie!`;
             }
@@ -718,16 +1466,18 @@
             }
         }
 
+        
+
         // Display the game over screen
         function displayGameOver(winner) {
             const winnerArea = winner === myPlayer ? document.getElementById('my-player-area') : document.getElementById('opponent-player-area');
             winnerArea.classList.add('game-over-winner');
 
             // Show a notification for game over
-            showNotification(`Game Over! ${winner.name} Wins!`);
+            showNotification(`Game Over! ${winner.username} Wins!`);
         }
 
-        // Show a notification modal with a message
+        // Notification functions
         function showNotification(message) {
             const notification = document.getElementById('notification');
             const notificationMessage = document.getElementById('notification-message');
@@ -735,12 +1485,11 @@
             notification.style.display = 'block';
         }
 
-        // Close the notification modal
         function closeNotification() {
             const notification = document.getElementById('notification');
             notification.style.display = 'none';
         }
-    </script>
 
+    </script>
 </body>
 </html>
