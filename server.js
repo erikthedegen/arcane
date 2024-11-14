@@ -112,32 +112,49 @@ const games = {};
 // Global game state (cards and other global data)
 const globalGameState = {
   allCards: [
-    // Era 1 Cards
-    { name: 'Mr. Potato', era: 'Era 1', strength: 6, damage: 4, ability: 'Potato Shield', abilityDesc: 'Reduce incoming damage by 2', image: 'Mr. Potatoe.png' },
-    { name: 'Mr. Bob', era: 'Era 1', strength: 5, damage: 5, ability: "Bob's Rally", abilityDesc: 'All Era 1 cards gain +1 Strength', image: 'Mr. Bob.png' },
-    { name: 'Mr. Dog', era: 'Era 1', strength: 7, damage: 3, ability: 'Loyal Companion', abilityDesc: 'Gain 1 extra buck if you win', image: 'Mr. Dog.png' },
-    { name: 'Mr. Bones', era: 'Era 1', strength: 4, damage: 6, ability: 'Bone Crush', abilityDesc: '+2 damage', image: 'Mr. Bones.png' },
-    { name: 'Mr. Beans', era: 'Era 1', strength: 3, damage: 7, ability: 'Gas Cloud', abilityDesc: 'Opponent\'s card loses 1 Strength', image: 'Mr. Beans.png' },
-    // Era 2 Cards
-    { name: 'Trumpet', era: 'Era 2', strength: 5, damage: 5, ability: 'Sound Blast', abilityDesc: '+2 damage', image: 'Trumpet.png' },
-    { name: 'Boden', era: 'Era 2', strength: 6, damage: 4, ability: 'Strategic Insight', abilityDesc: 'Opponent loses 1 Buck', image: 'Boden.png' },
-    { name: 'Musket', era: 'Era 2', strength: 7, damage: 3, ability: 'Piercing Shot', abilityDesc: 'Ignore opponent\'s abilities', image: 'Musket.png' },
-    { name: 'Pnut', era: 'Era 2', strength: 4, damage: 6, ability: 'Nut Barrage', abilityDesc: '+2 Strength', image: 'Pnut.png' },
-    { name: 'Old Man', era: 'Era 2', strength: 3, damage: 7, ability: 'Wise Advice', abilityDesc: 'Gain 2 LP', image: 'Old Man.png' },
-    // Era 3 Cards
-    { name: 'Mikey', era: 'Era 3', strength: 6, damage: 4, ability: 'Tech Savvy', abilityDesc: 'Opponent\'s damage reduced by 2', image: 'Mikey.png' },
-    { name: 'Chadman', era: 'Era 3', strength: 7, damage: 3, ability: 'Power Flex', abilityDesc: '+3 Strength', image: 'Chadman.png' },
-    { name: 'Donerman', era: 'Era 3', strength: 5, damage: 5, ability: 'Late Night Snack', abilityDesc: 'Gain 2 Bucks', image: 'Donerman.png' },
-    { name: 'Turkiman', era: 'Era 3', strength: 4, damage: 6, ability: 'Feast', abilityDesc: 'Gain 2 LP', image: 'Turkiman.png' },
-    { name: 'Burningman', era: 'Era 3', strength: 3, damage: 7, ability: 'Flame Aura', abilityDesc: 'Opponent loses 2 LP', image: 'Burningman.png' },
-    // Era 4 Cards
-    { name: 'Samwichman', era: 'Era 4', strength: 6, damage: 4, ability: 'Layered Attack', abilityDesc: 'Strength is doubled', image: 'Samwichman.png' },
-    { name: 'Toat', era: 'Era 4', strength: 5, damage: 5, ability: 'Burnt Toast', abilityDesc: 'Opponent\'s card loses 2 Strength', image: 'Toat.png' },
-    { name: 'Forkman', era: 'Era 4', strength: 7, damage: 3, ability: 'Sharp Edges', abilityDesc: '+3 damage', image: 'Forkman.png' },
-    { name: 'Dishspencer', era: 'Era 4', strength: 4, damage: 6, ability: 'Dish Throw', abilityDesc: 'Opponent loses 2 LP', image: 'Dishspencer.png' },
-    { name: 'Chairman', era: 'Era 4', strength: 3, damage: 7, ability: 'Heavy Seat', abilityDesc: 'Opponent loses 1 Buck', image: 'Chairman.png' },
+    // Era 1 Cards: "-10 Opp. Attack, Min 9"
+    { name: 'Mr. Potato', era: 'Era 1', strength: 6, damage: 4, abilityDesc: '-10 Opp. Attack, Min 9', image: 'images/Mr_Potato.png' },
+    { name: 'Mr. Bob', era: 'Era 1', strength: 5, damage: 5, abilityDesc: '-10 Opp. Attack, Min 9', image: 'images/Mr_Bob.png' },
+    { name: 'Mr. Dog', era: 'Era 1', strength: 7, damage: 3, abilityDesc: '-10 Opp. Attack, Min 9', image: 'images/Mr_Dog.png' },
+
+    // Era 2 Cards: "-2 Opp. Damage, Min 1"
+    { name: 'Mr. Bones', era: 'Era 2', strength: 7, damage: 3, abilityDesc: '-2 Opp. Damage, Min 1', image: 'images/Mr_Bones.png' },
+    { name: 'Mr. Beans', era: 'Era 2', strength: 6, damage: 4, abilityDesc: '-2 Opp. Damage, Min 1', image: 'images/Mr_Beans.png' },
+    { name: 'Trumpet', era: 'Era 2', strength: 5, damage: 5, abilityDesc: '-2 Opp. Damage, Min 1', image: 'images/Trumpet.png' },
+
+    // Era 3 Cards: "+1 Attack Per Life Left"
+    { name: 'Boden', era: 'Era 3', strength: 4, damage: 6, abilityDesc: '+1 Attack per Life Left', image: 'images/Boden.png' },
+    { name: 'Musket', era: 'Era 3', strength: 5, damage: 5, abilityDesc: '+1 Attack per Life Left', image: 'images/Musket.png' },
+    { name: 'Pnut', era: 'Era 3', strength: 3, damage: 7, abilityDesc: '+1 Attack per Life Left', image: 'images/Pnut.png' },
+
+    // Era 4 Cards: "+2 Life"
+    { name: 'Old Man', era: 'Era 4', strength: 5, damage: 5, abilityDesc: '+2 Life', image: 'images/Old_Man.png' },
+    { name: 'Mikey', era: 'Era 4', strength: 6, damage: 4, abilityDesc: '+2 Life', image: 'images/Mikey.png' },
+    { name: 'JD', era: 'Era 4', strength: 4, damage: 6, abilityDesc: '+2 Life', image: 'images/JD.png' },
+
+    // Era 5 Cards: "Stop Opp. Ability"
+    { name: 'Chadman', era: 'Era 5', strength: 6, damage: 4, abilityDesc: 'Stop Opp. Ability', image: 'images/Chadman.png' },
+    { name: 'Donerman', era: 'Era 5', strength: 5, damage: 5, abilityDesc: 'Stop Opp. Ability', image: 'images/Donerman.png' },
+    { name: 'Arnie', era: 'Era 5', strength: 4, damage: 6, abilityDesc: 'Stop Opp. Ability', image: 'images/Arnie.png' },
+
+    // Era 6 Cards: "Cancel Opp. attack Modif."
+    { name: 'Turkiman', era: 'Era 6', strength: 4, damage: 6, abilityDesc: 'Cancel Opp. attack Modif.', image: 'images/Turkiman.png' },
+    { name: 'Burningman', era: 'Era 6', strength: 3, damage: 7, abilityDesc: 'Cancel Opp. attack Modif.', image: 'images/Burningman.png' },
+    { name: 'Jakey', era: 'Era 6', strength: 5, damage: 5, abilityDesc: 'Cancel Opp. attack Modif.', image: 'images/Jakey.png' },
+
+    // Era 7 Cards: "Damage +2"
+    { name: 'Samwichman', era: 'Era 7', strength: 5, damage: 5, abilityDesc: 'Damage +2', image: 'images/Samwichman.png' },
+    { name: 'Toat', era: 'Era 7', strength: 6, damage: 4, abilityDesc: 'Damage +2', image: 'images/Toat.png' },
+    { name: 'Oleg', era: 'Era 7', strength: 7, damage: 3, abilityDesc: 'Damage +2', image: 'images/Oleg.png' },
+
+    // Era 8 Cards: "Attack +8"
+    { name: 'Forkman', era: 'Era 8', strength: 4, damage: 6, abilityDesc: 'Attack +8', image: 'images/Forkman.png' },
+    { name: 'Dishspencer', era: 'Era 8', strength: 5, damage: 5, abilityDesc: 'Attack +8', image: 'images/Dishspencer.png' },
+    { name: 'Chairman', era: 'Era 8', strength: 3, damage: 7, abilityDesc: 'Attack +8', image: 'images/Chairman.png' },
   ],
 };
+
+
 
 // Matchmaking queue
 const matchmakingQueue = [];
@@ -365,7 +382,7 @@ function selectRandomCardsFromDeck(deckCards, count, gameState) {
     const cardName = deckCardsCopy.splice(randomIndex, 1)[0];
     const card = gameState.allCards.find(c => c.name === cardName);
     if (card) {
-      selectedCards.push({ ...card }); // Create a copy of the card object
+      selectedCards.push({ ...card, baseStrength: card.strength }); // Create a copy of the card object with baseStrength
     } else {
       console.warn(`Card ${cardName} not found in allCards.`);
     }
@@ -373,6 +390,39 @@ function selectRandomCardsFromDeck(deckCards, count, gameState) {
 
   return selectedCards;
 }
+
+
+
+function prepareGameStateForPlayer(gameState, playerId) {
+  // Deep copy the gameState
+  const playerGameState = JSON.parse(JSON.stringify(gameState));
+
+  // Identify the player and opponent in the copied gameState
+  let player, opponent;
+
+  if (playerGameState.player1.id === playerId) {
+    player = playerGameState.player1;
+    opponent = playerGameState.player2;
+  } else {
+    player = playerGameState.player2;
+    opponent = playerGameState.player1;
+  }
+
+  // During selection phase, mask opponent's bucks if they have made their selection
+  if (!gameState.gameOver && gameState.selectionPhase !== 'battle') {
+    // For the opponent, if they have selected their bucks, we need to restore their bucks to before selection
+    if (opponent.selectedBucks !== null && opponent.selectedBucks !== undefined) {
+      opponent.bucks = opponent.bucksBeforeSelection || opponent.bucks + opponent.selectedBucks;
+    }
+  }
+
+  // Remove bucksBeforeSelection from both players to avoid sending unnecessary data
+  delete player.bucksBeforeSelection;
+  delete opponent.bucksBeforeSelection;
+
+  return playerGameState;
+}
+
 
 // Handle player actions such as selecting a card or submitting a move
 function handlePlayerAction(socketId, data, gameId) {
@@ -422,6 +472,7 @@ function handlePlayerAction(socketId, data, gameId) {
         return;
       }
       player.selectedBucks = selectedBucks;
+      player.bucksBeforeSelection = player.bucks; // Store current bucks before deduction
       player.bucks -= selectedBucks;
       console.log(`${player.name} boosted with ${selectedBucks} bucks.`);
 
@@ -442,6 +493,11 @@ function handlePlayerAction(socketId, data, gameId) {
       // Reset player's selected card and bucks
       player.selectedCard = null;
       player.selectedBucks = 0;
+      // Restore bucks to before selection
+      if (player.bucksBeforeSelection !== undefined) {
+        player.bucks = player.bucksBeforeSelection;
+        delete player.bucksBeforeSelection;
+      }
       console.log(`${player.name} canceled their card selection.`);
       break;
 
@@ -450,13 +506,20 @@ function handlePlayerAction(socketId, data, gameId) {
       break;
   }
 
+  // Prepare game state for each player
+  const playerGameState = prepareGameStateForPlayer(gameState, socketId);
+  const opponentGameState = prepareGameStateForPlayer(gameState, opponent.id);
+
   // Emit the updated game state to both players
-  io.to(player.id).emit('gameState', gameState);
-  io.to(opponent.id).emit('gameState', gameState);
+  io.to(player.id).emit('gameState', playerGameState);
+  io.to(opponent.id).emit('gameState', opponentGameState);
 }
 
+
 // Resolve the battle between selected cards
- function resolveBattle(gameId) {
+ // Resolve the battle between selected cards
+// Resolve the battle between selected cards
+function resolveBattle(gameId) {
   const gameState = games[gameId];
 
   console.log(`Resolving battle for Round ${gameState.round}.`);
@@ -476,151 +539,172 @@ function handlePlayerAction(socketId, data, gameId) {
   attacker.extraDamage = 0;
   defender.extraDamage = 0;
 
-  attackerPlayer.tempVariables = {
-      incomingDamageReduction: 0,
-      activeCardStrengthReduction: 0,
-  };
-  defenderPlayer.tempVariables = {
-      incomingDamageReduction: 0,
-      activeCardStrengthReduction: 0,
-  };
+  attackerPlayer.tempVariables = {};
+  defenderPlayer.tempVariables = {};
 
-  // Pre-battle phase: Apply strength modifications
+  // Pre-battle phase: Apply abilities
   applyAbilities(attackerPlayer, defenderPlayer, attacker, 'preBattle');
   applyAbilities(defenderPlayer, attackerPlayer, defender, 'preBattle');
 
-  // Calculate strengths after pre-battle abilities
-  let attackerStrength = attacker.tempStrength;
-  let defenderStrength = defender.tempStrength;
+  // Determine bucks multipliers
+  let attackerBucksMultiplier = 1 + attackerPlayer.selectedBucks;
+  let defenderBucksMultiplier = 1 + defenderPlayer.selectedBucks;
 
-  // Apply strength reductions from abilities
-  if (defenderPlayer.tempVariables.activeCardStrengthReduction && !attackerPlayer.tempVariables.abilitiesIgnored) {
-      attackerStrength -= defenderPlayer.tempVariables.activeCardStrengthReduction;
-      console.log(`${attacker.name}'s strength reduced by ${defenderPlayer.tempVariables.activeCardStrengthReduction}`);
+  // Check for attack modifiers canceled
+  if (attackerPlayer.tempVariables.attackModifiersCanceled) {
+    attackerBucksMultiplier = 1;
+    console.log(`${attackerPlayer.name}'s attack modifiers (bucks) are canceled due to opponent's ability`);
+  }
+  if (defenderPlayer.tempVariables.attackModifiersCanceled) {
+    defenderBucksMultiplier = 1;
+    console.log(`${defenderPlayer.name}'s attack modifiers (bucks) are canceled due to opponent's ability`);
   }
 
-  if (attackerPlayer.tempVariables.activeCardStrengthReduction && !defenderPlayer.tempVariables.abilitiesIgnored) {
-      defenderStrength -= attackerPlayer.tempVariables.activeCardStrengthReduction;
-      console.log(`${defender.name}'s strength reduced by ${attackerPlayer.tempVariables.activeCardStrengthReduction}`);
+  // Calculate total attacks
+  let attackerTotalAttack = attacker.tempStrength * attackerBucksMultiplier;
+  let defenderTotalAttack = defender.tempStrength * defenderBucksMultiplier;
+
+  // Battle phase: Apply abilities that modify attack after multiplication
+  applyAbilities(attackerPlayer, defenderPlayer, attacker, 'battle');
+  applyAbilities(defenderPlayer, attackerPlayer, defender, 'battle');
+
+  // Add tempAttackBoosts to total attack
+  if (attacker.tempAttackBoost) {
+    attackerTotalAttack += attacker.tempAttackBoost;
+    console.log(`${attacker.name}'s attack increased by ${attacker.tempAttackBoost}`);
+  }
+  if (defender.tempAttackBoost) {
+    defenderTotalAttack += defender.tempAttackBoost;
+    console.log(`${defender.name}'s attack increased by ${defender.tempAttackBoost}`);
   }
 
-  // Ensure strengths are not negative
-  attackerStrength = Math.max(0, attackerStrength);
-  defenderStrength = Math.max(0, defenderStrength);
+  // Apply attack reductions (Era 1 ability)
+  if (defenderPlayer.tempVariables.reduceAttack) {
+    attackerTotalAttack = Math.max(
+      attackerTotalAttack - defenderPlayer.tempVariables.reduceAttack,
+      defenderPlayer.tempVariables.attackMin
+    );
+    console.log(
+      `${attackerPlayer.name}'s attack reduced by ${defenderPlayer.tempVariables.reduceAttack}, min ${defenderPlayer.tempVariables.attackMin}, due to ${defenderPlayer.name}'s ability`
+    );
+  }
+  if (attackerPlayer.tempVariables.reduceAttack) {
+    defenderTotalAttack = Math.max(
+      defenderTotalAttack - attackerPlayer.tempVariables.reduceAttack,
+      attackerPlayer.tempVariables.attackMin
+    );
+    console.log(
+      `${defenderPlayer.name}'s attack reduced by ${attackerPlayer.tempVariables.reduceAttack}, min ${attackerPlayer.tempVariables.attackMin}, due to ${attackerPlayer.name}'s ability`
+    );
+  }
 
-  // Calculate total strengths with bucks
-  const attackerTotalStrength = attackerStrength * (1 + attackerPlayer.selectedBucks);
-  const defenderTotalStrength = defenderStrength * (1 + defenderPlayer.selectedBucks);
+  console.log(`Attacker Total Attack: ${attackerTotalAttack}`);
+  console.log(`Defender Total Attack: ${defenderTotalAttack}`);
 
-  console.log(`Attacker Total Strength: ${attackerTotalStrength}`);
-  console.log(`Defender Total Strength: ${defenderTotalStrength}`);
-
-  // Initialize battle outcome variables
+  // Determine winner and apply abilities
   let battleOutcome = '';
   let damage = 0;
 
-  // Determine winner and apply abilities
-  if (attackerTotalStrength > defenderTotalStrength) {
-      battleOutcome = 'attacker';
-      damage = attacker.damage + (attacker.extraDamage || 0);
+  if (attackerTotalAttack > defenderTotalAttack) {
+    battleOutcome = 'attacker';
+    damage = attacker.damage + (attacker.extraDamage || 0);
+    console.log(`${attackerPlayer.name} wins the battle and deals ${damage} damage to ${defenderPlayer.name}.`);
 
-      // Apply win/lose abilities
-      if (hasEraBonus(attackerPlayer)) {
-          applyAbilities(attackerPlayer, defenderPlayer, attacker, 'postWin');
-      }
-      if (hasEraBonus(defenderPlayer)) {
-          applyAbilities(defenderPlayer, attackerPlayer, defender, 'onLose');
-      }
+    // Post-battle phase: Apply abilities
+    applyAbilities(attackerPlayer, defenderPlayer, attacker, 'postBattle');
+    applyAbilities(defenderPlayer, attackerPlayer, defender, 'postBattle');
 
-      // Apply damage reduction
-      if (defenderPlayer.tempVariables.incomingDamageReduction) {
-          damage = Math.max(0, damage - defenderPlayer.tempVariables.incomingDamageReduction);
-      }
-      
-      defenderPlayer.lp -= damage;
-      console.log(`${attackerPlayer.name} wins the battle and deals ${damage} damage to ${defenderPlayer.name}.`);
+    // Apply damage modifications based on defender's ability to reduce opponent's damage
+    if (defenderPlayer.tempVariables.reduceOpponentDamage) {
+      damage = Math.max(damage - defenderPlayer.tempVariables.reduceOpponentDamage, defenderPlayer.tempVariables.opponentDamageMin);
+      console.log(
+        `${attackerPlayer.name}'s damage reduced by ${defenderPlayer.tempVariables.reduceOpponentDamage}, min ${defenderPlayer.tempVariables.opponentDamageMin}, due to ${defenderPlayer.name}'s ability`
+      );
+    }
 
-  } else if (defenderTotalStrength > attackerTotalStrength) {
-      battleOutcome = 'defender';
-      damage = defender.damage + (defender.extraDamage || 0);
+    // Apply damage
+    defenderPlayer.lp -= damage;
 
-      // Apply win/lose abilities
-      if (hasEraBonus(defenderPlayer)) {
-          applyAbilities(defenderPlayer, attackerPlayer, defender, 'postWin');
-      }
-      if (hasEraBonus(attackerPlayer)) {
-          applyAbilities(attackerPlayer, defenderPlayer, attacker, 'onLose');
-      }
+    // Post-win phase: Apply abilities
+    applyAbilities(attackerPlayer, defenderPlayer, attacker, 'postWin');
 
-      // Apply damage reduction
-      if (attackerPlayer.tempVariables.incomingDamageReduction) {
-          damage = Math.max(0, damage - attackerPlayer.tempVariables.incomingDamageReduction);
-      }
-      
-      attackerPlayer.lp -= damage;
-      console.log(`${defenderPlayer.name} wins the battle and deals ${damage} damage to ${attackerPlayer.name}.`);
+  } else if (defenderTotalAttack > attackerTotalAttack) {
+    battleOutcome = 'defender';
+    damage = defender.damage + (defender.extraDamage || 0);
+    console.log(`${defenderPlayer.name} wins the battle and deals ${damage} damage to ${attackerPlayer.name}.`);
+
+    // Post-battle phase: Apply abilities
+    applyAbilities(defenderPlayer, attackerPlayer, defender, 'postBattle');
+    applyAbilities(attackerPlayer, defenderPlayer, attacker, 'postBattle');
+
+    // Apply damage modifications based on attacker's ability to reduce opponent's damage
+    if (attackerPlayer.tempVariables.reduceOpponentDamage) {
+      damage = Math.max(damage - attackerPlayer.tempVariables.reduceOpponentDamage, attackerPlayer.tempVariables.opponentDamageMin);
+      console.log(
+        `${defenderPlayer.name}'s damage reduced by ${attackerPlayer.tempVariables.reduceOpponentDamage}, min ${attackerPlayer.tempVariables.opponentDamageMin}, due to ${attackerPlayer.name}'s ability`
+      );
+    }
+
+    // Apply damage
+    attackerPlayer.lp -= damage;
+
+    // Post-win phase: Apply abilities
+    applyAbilities(defenderPlayer, attackerPlayer, defender, 'postWin');
 
   } else {
-      battleOutcome = 'tie';
-      console.log('The battle ended in a tie. No damage dealt.');
+    battleOutcome = 'tie';
+    console.log('The battle ended in a tie. No damage dealt.');
   }
 
-  // Set battleResult in gameState
-  gameState.battleResult = {
-      id: Date.now(),
-      attackerCardIndex: attackerPlayer.selectedCard,
-      defenderCardIndex: defenderPlayer.selectedCard,
-      winner: battleOutcome,
-      damageDealt: damage,
-      lpChanges: {
-          [attackerPlayer.id]: attackerPlayer.lp,
-          [defenderPlayer.id]: defenderPlayer.lp,
-      },
-      attackerId: attackerPlayer.id,
-      defenderId: defenderPlayer.id,
-      attackerTotalStrength: attackerTotalStrength,
-      defenderTotalStrength: defenderTotalStrength,
-      attackerBucksBet: attackerPlayer.selectedBucks,
-      defenderBucksBet: defenderPlayer.selectedBucks,
-  };
-
   // Mark cards as used and store battle info
-  markCardAsUsed(attackerPlayer, battleOutcome === 'attacker', attackerTotalStrength);
-  markCardAsUsed(defenderPlayer, battleOutcome === 'defender', defenderTotalStrength);
+  markCardAsUsed(attackerPlayer, battleOutcome === 'attacker', attackerTotalAttack);
+  markCardAsUsed(defenderPlayer, battleOutcome === 'defender', defenderTotalAttack);
 
   // Reset temporary variables
   resetPlayerTempVariables(attackerPlayer);
   resetPlayerTempVariables(defenderPlayer);
 
+  // Clear bucksBeforeSelection
+  delete attackerPlayer.bucksBeforeSelection;
+  delete defenderPlayer.bucksBeforeSelection;
+
   // Check for game over conditions
   if (attackerPlayer.lp <= 0 || defenderPlayer.lp <= 0) {
-      gameState.gameOver = true;
-      console.log('Game Over due to LP reaching 0.');
+    gameState.gameOver = true;
+    console.log('Game Over due to LP reaching 0.');
   } else if (gameState.round >= 4) {
-      gameState.gameOver = true;
-      console.log('Game Over after 4 rounds.');
+    gameState.gameOver = true;
+    console.log('Game Over after 4 rounds.');
   }
 
   // Prepare for next turn
   if (!gameState.gameOver) {
-      gameState.round += 1;
-      gameState.selectionPhase = 'attacker';
-      gameState.startingPlayer = gameState.startingPlayer === gameState.player1 ? gameState.player2 : gameState.player1;
-      gameState.currentPlayer = gameState.startingPlayer;
+    gameState.round += 1;
+    gameState.selectionPhase = 'attacker';
+    gameState.startingPlayer = gameState.startingPlayer === gameState.player1 ? gameState.player2 : gameState.player1;
+    gameState.currentPlayer = gameState.startingPlayer;
 
-      // Reset selections
-      gameState.player1.selectedCard = null;
-      gameState.player2.selectedCard = null;
-      gameState.player1.selectedBucks = 0;
-      gameState.player2.selectedBucks = 0;
+    // Reset selections
+    gameState.player1.selectedCard = null;
+    gameState.player2.selectedCard = null;
+    gameState.player1.selectedBucks = 0;
+    gameState.player2.selectedBucks = 0;
 
-      console.log(`Round ${gameState.round} starts. Current Player: ${gameState.currentPlayer.name}`);
+    console.log(`Round ${gameState.round} starts. Current Player: ${gameState.currentPlayer.name}`);
   }
 
+  // Prepare game state for each player
+  const player1GameState = prepareGameStateForPlayer(gameState, gameState.player1.id);
+  const player2GameState = prepareGameStateForPlayer(gameState, gameState.player2.id);
+
   // Emit updated game state to both players
-  io.to(gameState.player1.id).emit('gameState', gameState);
-  io.to(gameState.player2.id).emit('gameState', gameState);
+  io.to(gameState.player1.id).emit('gameState', player1GameState);
+  io.to(gameState.player2.id).emit('gameState', player2GameState);
 }
+
+
+
+
 
 // Function to mark a card as used and store battle info
 function markCardAsUsed(player, wonBattle, totalStrength) {
@@ -636,13 +720,16 @@ function markCardAsUsed(player, wonBattle, totalStrength) {
 }
 
 
-function hasEraBonus(player) {
+function hasEraBonus(player, era) {
   const eraCounts = {};
   player.field.forEach(card => {
+    if (!card.used) { // Only consider unused cards
       eraCounts[card.era] = (eraCounts[card.era] || 0) + 1;
+    }
   });
-  return Object.values(eraCounts).some(count => count >= 2);
+  return eraCounts[era] >= 2;
 }
+
 
 
 const ABILITY_TYPES = {
@@ -691,170 +778,121 @@ function getAbilityType(abilityName) {
   }
 }
 
-function applyAbilities(player, opponent, card, battlePhase = 'preBattle') {
+function applyAbilities(player, opponent, card, battlePhase) {
   if (!player.tempVariables) player.tempVariables = {};
   if (!opponent.tempVariables) opponent.tempVariables = {};
 
-  const hasEraRequirement = hasEraBonus(player);
-  if (!hasEraRequirement) {
-      console.log(`${player.name} doesn't have enough cards of the same era for abilities`);
-      return;
+  // Check if abilities are stopped
+  if (player.tempVariables.abilitiesStopped) {
+    console.log(`${player.name}'s abilities are stopped and will not be applied.`);
+    return;
   }
 
-  const abilityType = getAbilityType(card.ability);
-  
-  // Only process abilities that match the current battle phase
-  if (abilityType !== battlePhase) return;
-
-  // Check if abilities are ignored by Piercing Shot
-  if (opponent.tempVariables.abilitiesIgnored && abilityType !== ABILITY_TYPES.ONGOING) {
-      console.log(`${player.name}'s abilities are ignored due to Piercing Shot`);
-      return;
+  // Check if the player has at least 2 cards of the same era
+  if (!hasEraBonus(player, card.era)) {
+    console.log(`${player.name} does not have enough cards of the same era to activate the ability of ${card.name}`);
+    return;
   }
 
-  switch (card.ability) {
-      // PRE-BATTLE ABILITIES
-      case 'Gas Cloud':
-          if (battlePhase === 'preBattle') {
-              opponent.tempVariables.activeCardStrengthReduction = 
-                  (opponent.tempVariables.activeCardStrengthReduction || 0) + 1;
-              console.log(`${opponent.name}'s card base strength reduced by 1 due to Gas Cloud`);
-          }
-          break;
+  const era = card.era;
 
-      case 'Burnt Toast':
-          if (battlePhase === 'preBattle') {
-              opponent.tempVariables.activeCardStrengthReduction = 
-                  (opponent.tempVariables.activeCardStrengthReduction || 0) + 2;
-              console.log(`${opponent.name}'s card base strength reduced by 2 due to Burnt Toast`);
-          }
-          break;
+  switch (era) {
+    case 'Era 1':
+      // "-10 Opp. Attack, Min 9"
+      if (battlePhase === 'battle') {
+        opponent.tempVariables.reduceAttack = 10;
+        opponent.tempVariables.attackMin = 9;
+        console.log(`${player.name}'s ability will reduce ${opponent.name}'s attack by 10, min 9`);
+      }
+      break;
 
-      case 'Tech Savvy':
-          if (battlePhase === 'preBattle') {
-              opponent.tempVariables.damageReduction = 
-                  (opponent.tempVariables.damageReduction || 0) + 2;
-              console.log(`${opponent.name}'s damage reduced by 2 due to Tech Savvy`);
-          }
-          break;
+    case 'Era 2':
+      // "-2 Opp. Damage, Min 1"
+      if (battlePhase === 'postBattle') {
+        player.tempVariables.reduceOpponentDamage = 2;
+        player.tempVariables.opponentDamageMin = 1;
+        console.log(`${player.name}'s ability will reduce opponent's damage by 2, min 1`);
+      }
+      break;
 
-      case 'Nut Barrage':
-          if (battlePhase === 'preBattle') {
-              card.tempStrength = (card.baseStrength || card.strength) + 2;
-              console.log(`${card.name}'s strength increased by 2 due to Nut Barrage`);
-          }
-          break;
+    case 'Era 3':
+      // "+1 Attack Per Life Left"
+      if (battlePhase === 'battle') {
+        if (!opponent.tempVariables.attackModifiersCanceled) {
+          const attackIncrease = player.lp;
+          card.tempAttackBoost = (card.tempAttackBoost || 0) + attackIncrease;
+          console.log(`${player.name}'s attack increases by ${attackIncrease} due to Era 3 ability`);
+        } else {
+          console.log(`${player.name}'s attack modifiers are canceled and Era 3 ability is not applied.`);
+        }
+      }
+      break;
 
-      case 'Power Flex':
-          if (battlePhase === 'preBattle') {
-              card.tempStrength = (card.baseStrength || card.strength) + 3;
-              console.log(`${card.name}'s strength increased by 3 due to Power Flex`);
-          }
-          break;
+    case 'Era 4':
+      // "+2 Life"
+      if (battlePhase === 'postWin') {
+        player.lp += 2;
+        console.log(`${player.name} gains 2 life due to Era 4 ability`);
+      }
+      break;
 
-      case 'Layered Attack':
-          if (battlePhase === 'preBattle') {
-              card.tempStrength = (card.baseStrength || card.strength) * 2;
-              console.log(`${card.name}'s strength doubled due to Layered Attack`);
-          }
-          break;
+    case 'Era 5':
+      // "Stop Opp. Ability"
+      if (battlePhase === 'preBattle') {
+        opponent.tempVariables.abilitiesStopped = true;
+        console.log(`${opponent.name}'s abilities are stopped due to ${player.name}'s Era 5 ability`);
+      }
+      break;
 
-      // ON-LOSE ABILITIES
-      case 'Potato Shield':
-          if (battlePhase === 'onLose') {
-              player.tempVariables.incomingDamageReduction = 
-                  (player.tempVariables.incomingDamageReduction || 0) + 2;
-              console.log(`${player.name}'s Potato Shield reduces incoming damage by 2`);
-          }
-          break;
+    case 'Era 6':
+      // "Cancel Opp. attack Modif."
+      if (battlePhase === 'preBattle') {
+        opponent.tempVariables.attackModifiersCanceled = true;
+        console.log(`${opponent.name}'s attack modifiers are canceled due to ${player.name}'s Era 6 ability`);
+      }
+      break;
 
-      // POST-WIN ABILITIES
-      case "Bob's Rally":
-          if (battlePhase === 'postWin') {
-              player.field.forEach(c => {
-                  if (c.era === 'Era 1' && !c.used) {
-                      c.baseStrength = (c.baseStrength || c.strength) + 1;
-                      console.log(`${c.name}'s base strength increased by 1 due to Bob's Rally`);
-                  }
-              });
-          }
-          break;
+    case 'Era 7':
+      // "Damage +2"
+      if (battlePhase === 'postBattle') {
+        card.extraDamage = (card.extraDamage || 0) + 2;
+        console.log(`${card.name}'s damage increases by 2 due to Era 7 ability`);
+      }
+      break;
 
-      case 'Wise Advice':
-      case 'Feast':
-          if (battlePhase === 'postWin') {
-              player.lp += 2;
-              console.log(`${player.name} gains 2 LP from ${card.ability}`);
-          }
-          break;
+    case 'Era 8':
+      // "Attack +8"
+      if (battlePhase === 'battle') {
+        if (!opponent.tempVariables.attackModifiersCanceled) {
+          card.tempAttackBoost = (card.tempAttackBoost || 0) + 8;
+          console.log(`${card.name}'s attack increases by 8 due to Era 8 ability`);
+        } else {
+          console.log(`${player.name}'s attack modifiers are canceled and Era 8 ability is not applied.`);
+        }
+      }
+      break;
 
-      case 'Flame Aura':
-      case 'Dish Throw':
-          if (battlePhase === 'postWin') {
-              opponent.lp -= 2;
-              console.log(`${opponent.name} loses 2 LP from ${card.ability}`);
-          }
-          break;
-
-      case 'Heavy Seat':
-      case 'Strategic Insight':
-          if (battlePhase === 'postWin') {
-              opponent.bucks = Math.max(0, opponent.bucks - 1);
-              console.log(`${opponent.name} loses 1 buck from ${card.ability}`);
-          }
-          break;
-
-      case 'Loyal Companion':
-          if (battlePhase === 'postWin') {
-              player.bucks += 1;
-              console.log(`${player.name} gains 1 buck from Loyal Companion`);
-          }
-          break;
-
-      case 'Late Night Snack':
-          if (battlePhase === 'postWin') {
-              player.bucks += 2;
-              console.log(`${player.name} gains 2 bucks from Late Night Snack`);
-          }
-          break;
-
-      case 'Bone Crush':
-      case 'Sound Blast':
-          if (battlePhase === 'postWin') {
-              card.extraDamage = (card.extraDamage || 0) + 2;
-              console.log(`${card.name} gains +2 damage from ${card.ability}`);
-          }
-          break;
-
-      case 'Sharp Edges':
-          if (battlePhase === 'postWin') {
-              card.extraDamage = (card.extraDamage || 0) + 3;
-              console.log(`${card.name} gains +3 damage from Sharp Edges`);
-          }
-          break;
-
-      // SPECIAL ABILITIES
-      case 'Piercing Shot':
-          opponent.tempVariables.abilitiesIgnored = true;
-          console.log(`${opponent.name}'s abilities are ignored due to Piercing Shot`);
-          break;
-
-      default:
-          console.warn(`Unknown ability: ${card.ability}`);
-          break;
+    default:
+      console.warn(`Unknown Era: ${era}`);
+      break;
   }
 }
+
+
+
+
 
 
 // Reset temporary variables after a battle
 function resetPlayerTempVariables(player) {
   player.tempVariables = {};
   player.field.forEach(card => {
-    card.tempStrength = card.strength;
+    card.tempStrength = card.baseStrength || card.strength;
     card.extraDamage = 0;
   });
   console.log(`${player.name}'s temporary variables have been reset.`);
 }
+
 
 // Generate a unique game ID
 function generateGameId() {
